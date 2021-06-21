@@ -125,11 +125,13 @@ struct AppWindow
             }
         }
 
-        // Special care running down Xaml to avoid leaks and crashes.
+        // Special care running down Xaml to avoid leaks and crashes, a ref cycle
+        // between the manager and the source needs to be broken this way.
         // http://task.ms/33787363
-        m_xamlSource = nullptr;
+        m_xamlSource.Close();
 
-        // Drain the message queue since Xaml rundown is async
+        // Drain the message queue since Xaml rundown is async, verify with a break point
+        // on Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close.
         // http://task.ms/33731494
         m_xamlManager = nullptr;
 
