@@ -17,6 +17,7 @@ PCWSTR contentText = LR"(
     <Rectangle Fill = "Green" Width = "100" Height = "100" Margin = "5" />
     <Rectangle Fill = "Purple" Width = "100" Height = "100" Margin = "5" />
     <TextBlock TextAlignment="Center">Multi-Window App, Click on a box to create a new window</TextBlock>
+    <TextBlock TextAlignment="Left"></TextBlock>
 </StackPanel>
 )";
 
@@ -82,6 +83,14 @@ struct AppWindow
 
         auto content = winrt::XamlReader::Load(contentText).as<winrt::UIElement>();
 
+        m_xamlSource.Content(content);
+
+        m_rootChangedRevoker = content.XamlRoot().Changed(winrt::auto_revoke, [](const auto& sender, const winrt::XamlRootChangedEventArgs& args)
+        {
+            auto scale = sender.RasterizationScale();
+            auto visible = sender.IsHostVisible();
+        });
+
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
         {
             auto poitnerId = args.Pointer().PointerId();
@@ -92,8 +101,6 @@ struct AppWindow
                 std::make_unique<AppWindow>()->Show(SW_SHOWNORMAL);
             }).detach();
         });
-        
-        m_xamlSource.Content(content);
 
         return 0;
     }
@@ -159,6 +166,7 @@ struct AppWindow
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
 
     winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
+    winrt::Windows::UI::Xaml::XamlRoot::Changed_revoker m_rootChangedRevoker;
 };
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
