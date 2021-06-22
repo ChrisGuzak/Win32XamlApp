@@ -113,8 +113,7 @@ struct AppWindow
 
     LRESULT OnSize(WPARAM /* SIZE_XXX */wparam, LPARAM /* x, y */ lparam)
     {
-        auto dx = LOWORD(lparam);
-        auto dy = HIWORD(lparam);
+        const auto dx = LOWORD(lparam), dy = HIWORD(lparam);
         SetWindowPos(m_xamlSourceWindow, nullptr, 0, 0, dx, dy, SWP_SHOWWINDOW);
         return 0;
     }
