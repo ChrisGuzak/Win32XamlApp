@@ -76,7 +76,6 @@ struct AppWindow
     {
         // WindowsXamlManager must be used if multiple islands are created on the thread or in the process.
         // It must be constructed before the first DesktopWindowXamlSource.
-        m_xamlManager = winrt::WindowsXamlManager::InitializeForCurrentThread();
         m_xamlSource = winrt::DesktopWindowXamlSource();
 
         auto interop = m_xamlSource.as<IDesktopWindowXamlSourceNative>();
@@ -151,20 +150,12 @@ struct AppWindow
         // zero or that Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close is called.
         m_xamlSource.Close();
 
-        // Work around http://task.ms/33731494, drain the message queue since Xaml rundown is async, verify as above.
-        while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
-        {
-            ::DispatchMessageW(&msg);
-        }
-
-        m_xamlManager = nullptr; // not strictly needed, but forces rundown of all resources now
     }
 
     const PCWSTR WindowClassName = L"Win32XamlAppWindow";
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
-    winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager{ nullptr };
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
 
     winrt::Windows::UI::Xaml::Controls::TextBlock m_status{ nullptr };
