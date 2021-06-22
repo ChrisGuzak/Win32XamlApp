@@ -1,7 +1,0 @@
-#include <windows.h>
-#include "resource.h"
-
-STRINGTABLE
-BEGIN
-   IDS_APP_TITLE       "Win32 Xaml App"
-END

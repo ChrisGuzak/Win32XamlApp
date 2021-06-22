@@ -12,19 +12,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Win32XamlApp.cpp" />
+    <ClCompile Include="MultiWindowXamlApp.cpp" />
     <ClCompile Include="pch.cpp">
       <Filter>build</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config">
-      <Filter>build</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="app.manifest">
+    <Manifest Include="..\app.manifest">
       <Filter>build</Filter>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\packages.config">
+      <Filter>build</Filter>
+    </None>
   </ItemGroup>
 </Project>

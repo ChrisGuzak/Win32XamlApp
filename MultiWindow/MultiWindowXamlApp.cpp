@@ -12,11 +12,11 @@ namespace winrt
 PCWSTR contentText = LR"(
 <StackPanel xmlns = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     Margin = "20">
-    <Rectangle Fill = "Red" Width = "50" Height = "50" Margin = "5" />
-    <Rectangle Fill = "Blue" Width = "50" Height = "50" Margin = "5" />
-    <Rectangle Fill = "Green" Width = "50" Height = "50" Margin = "5" />
-    <Rectangle Fill = "Purple" Width = "50" Height = "50" Margin = "5" />
-    <TextBlock TextAlignment="Center">Xaml!</TextBlock>
+    <Rectangle Fill = "Red" Width = "100" Height = "100" Margin = "5" />
+    <Rectangle Fill = "Blue" Width = "100" Height = "100" Margin = "5" />
+    <Rectangle Fill = "Green" Width = "100" Height = "100" Margin = "5" />
+    <Rectangle Fill = "Purple" Width = "100" Height = "100" Margin = "5" />
+    <TextBlock TextAlignment="Center">Multi-Window App, Click on a box to create a new window</TextBlock>
 </StackPanel>
 )";
 
@@ -71,6 +71,9 @@ struct AppWindow
 
     LRESULT OnCreate()
     {
+        // WindowsXamlManager must be used if multiple islands are created on the thread
+        // and it must be constructed before the first DesktopWindowXamlSource.
+        m_xamlManager = winrt::WindowsXamlManager::InitializeForCurrentThread();
         m_xamlSource = winrt::DesktopWindowXamlSource();
 
         auto interop = m_xamlSource.as<IDesktopWindowXamlSourceNative>();
@@ -78,10 +81,16 @@ struct AppWindow
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow));
 
         auto content = winrt::XamlReader::Load(contentText).as<winrt::UIElement>();
-        
+
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
         {
             auto poitnerId = args.Pointer().PointerId();
+
+            std::thread([]()
+            {
+                auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
+                std::make_unique<AppWindow>()->Show(SW_SHOWNORMAL);
+            }).detach();
         });
         
         m_xamlSource.Content(content);
@@ -131,15 +140,24 @@ struct AppWindow
         // In this use scenario we need to work around http://task.ms/33900412 (XamlCore leaked)
         // Verify Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager instance counters are 
         // zero or that Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close is called.
-        //
-        // Since this application exists this is not a problem in practice.
         m_xamlSource.Close();
+
+        // Drain the message queue since Xaml rundown is async, verify with a break point
+        // on Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close.
+        // http://task.ms/33731494
+        // m_xamlManager = nullptr;
+
+        while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
+        {
+            ::DispatchMessageW(&msg);
+        }
     }
 
     const PCWSTR WindowClassName = L"Win32XamlAppWindow";
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
+    winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager{ nullptr };
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
 
     winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
