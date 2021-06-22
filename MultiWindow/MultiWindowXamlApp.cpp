@@ -9,15 +9,17 @@ namespace winrt
     using namespace winrt::Windows::UI::Xaml::Markup;
 }
 
-PCWSTR contentText = LR"(
-<StackPanel xmlns = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+const PCWSTR contentText = LR"(
+<StackPanel
+    xmlns = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'  
     Margin = "20">
     <Rectangle Fill = "Red" Width = "100" Height = "100" Margin = "5" />
     <Rectangle Fill = "Blue" Width = "100" Height = "100" Margin = "5" />
     <Rectangle Fill = "Green" Width = "100" Height = "100" Margin = "5" />
     <Rectangle Fill = "Purple" Width = "100" Height = "100" Margin = "5" />
     <TextBlock TextAlignment="Center">Multi-Window App, Click on a box to create a new window</TextBlock>
-    <TextBlock TextAlignment="Left"></TextBlock>
+    <TextBlock x:Name="Status" TextAlignment="Left"></TextBlock>
 </StackPanel>
 )";
 
@@ -85,10 +87,14 @@ struct AppWindow
 
         m_xamlSource.Content(content);
 
-        m_rootChangedRevoker = content.XamlRoot().Changed(winrt::auto_revoke, [](const auto& sender, const winrt::XamlRootChangedEventArgs& args)
+        m_status = content.as<winrt::FrameworkElement>().FindName(L"Status").as<winrt::TextBlock>();
+
+        m_rootChangedRevoker = content.XamlRoot().Changed(winrt::auto_revoke, [this](const auto& sender, const winrt::XamlRootChangedEventArgs& args)
         {
             auto scale = sender.RasterizationScale();
             auto visible = sender.IsHostVisible();
+
+            m_status.Text(std::to_wstring(scale));
         });
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
@@ -137,11 +143,8 @@ struct AppWindow
         MSG msg = {};
         while (GetMessageW(&msg, nullptr, 0, 0))
         {
-            if (!TranslateAcceleratorW(msg.hwnd, nullptr, &msg))
-            {
-                TranslateMessage(&msg);
-                DispatchMessageW(&msg);
-            }
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
         }
 
         // In this use scenario we need to work around http://task.ms/33900412 (XamlCore leaked)
@@ -164,6 +167,8 @@ struct AppWindow
 
     winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager{ nullptr };
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
+
+    winrt::Windows::UI::Xaml::Controls::TextBlock m_status{ nullptr };
 
     winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
     winrt::Windows::UI::Xaml::XamlRoot::Changed_revoker m_rootChangedRevoker;
