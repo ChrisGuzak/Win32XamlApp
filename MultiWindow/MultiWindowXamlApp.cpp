@@ -71,8 +71,8 @@ struct AppWindow
 
     LRESULT OnCreate()
     {
-        // WindowsXamlManager must be used if multiple islands are created on the thread
-        // and it must be constructed before the first DesktopWindowXamlSource.
+        // WindowsXamlManager must be used if multiple islands are created on the thread or in the process.
+        // It must be constructed before the first DesktopWindowXamlSource.
         m_xamlManager = winrt::WindowsXamlManager::InitializeForCurrentThread();
         m_xamlSource = winrt::DesktopWindowXamlSource();
 
@@ -142,15 +142,13 @@ struct AppWindow
         // zero or that Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close is called.
         m_xamlSource.Close();
 
-        // Drain the message queue since Xaml rundown is async, verify with a break point
-        // on Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close.
-        // http://task.ms/33731494
-        // m_xamlManager = nullptr;
-
+        // Work around http://task.ms/33731494, drain the message queue since Xaml rundown is async, verify as above.
         while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
         {
             ::DispatchMessageW(&msg);
         }
+
+        m_xamlManager = nullptr; // not strictly needed, but forces rundown of all resources now
     }
 
     const PCWSTR WindowClassName = L"Win32XamlAppWindow";
