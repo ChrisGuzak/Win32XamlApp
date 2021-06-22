@@ -1,5 +1,13 @@
 #include "pch.h"
 
+namespace winrt
+{
+    using namespace winrt::Windows::UI::Xaml;
+    using namespace winrt::Windows::UI::Xaml::Controls;
+    using namespace winrt::Windows::UI::Xaml::Hosting;
+    using namespace winrt::Windows::UI::Xaml::Input;
+}
+
 template<typename T = winrt::Windows::UI::Xaml::UIElement>
 T LoadXamlControl(PCWSTR xamlText)
 {
@@ -74,14 +82,20 @@ struct AppWindow
 
     LRESULT OnCreate()
     {
-        m_xamlManager = winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
-        m_xamlSource = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
+        m_xamlManager = winrt::WindowsXamlManager::InitializeForCurrentThread();
+        m_xamlSource = winrt::DesktopWindowXamlSource();
 
         auto interop = m_xamlSource.as<IDesktopWindowXamlSourceNative>();
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow));
 
         auto content = LoadXamlControl(contentText);
+        
+        m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
+        {
+            auto poitnerId = args.Pointer().PointerId();
+        });
+        
         m_xamlSource.Content(content);
 
         return 0;
@@ -147,6 +161,8 @@ struct AppWindow
 
     winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager{ nullptr };
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
+
+    winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
 };
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
