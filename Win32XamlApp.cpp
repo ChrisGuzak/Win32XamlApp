@@ -77,7 +77,12 @@ struct AppWindow
 
     LRESULT OnCreate()
     {
+        // WindowsXamlManager must be used if multiple islands are created on the thread
+        // and it must be constructed before the first DesktopWindowXamlSource.
+// #define USE_MANAGER
+#ifdef USE_MANAGER
         m_xamlManager = winrt::WindowsXamlManager::InitializeForCurrentThread();
+#endif
         m_xamlSource = winrt::DesktopWindowXamlSource();
 
         auto interop = m_xamlSource.as<IDesktopWindowXamlSourceNative>();
@@ -140,22 +145,26 @@ struct AppWindow
         // http://task.ms/33787363
         m_xamlSource.Close();
 
+#ifdef USE_MANAGER
         // Drain the message queue since Xaml rundown is async, verify with a break point
         // on Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close.
         // http://task.ms/33731494
-        m_xamlManager = nullptr;
+        // m_xamlManager = nullptr;
 
         while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
         {
             ::DispatchMessageW(&msg);
         }
+#endif
     }
 
     const PCWSTR WindowClassName = L"Win32XamlAppWindow";
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
+#ifdef USE_MANAGER
     winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager{ nullptr };
+#endif
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
 
     winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
