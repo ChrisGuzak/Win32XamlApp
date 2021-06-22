@@ -15,11 +15,6 @@ T LoadXamlControl(PCWSTR xamlText)
     return content.as<T>();
 }
 
-PCWSTR contentTextSimple = LR"(
-<TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    TextAlignment="Center">Xaml!</TextBlock>
-)";
-
 PCWSTR contentText = LR"(
 <StackPanel xmlns = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     Margin = "20">
@@ -115,7 +110,7 @@ struct AppWindow
         return 0;
     }
 
-    void CreateAndShow(int nCmdShow)
+    void Show(int nCmdShow)
     {
         RegisterWindowClass();
 
@@ -125,6 +120,7 @@ struct AppWindow
 
         ShowWindow(m_window.get(), nCmdShow);
         UpdateWindow(m_window.get());
+        MessageLoop();
     }
 
     void MessageLoop()
@@ -169,9 +165,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmd
 {
     auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
 
-    auto appWindow = std::make_unique<AppWindow>();
-    appWindow->CreateAndShow(nCmdShow);
-    appWindow->MessageLoop();
+    std::make_unique<AppWindow>()->Show(nCmdShow);
 
     return 0;
 }
