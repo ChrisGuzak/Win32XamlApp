@@ -89,20 +89,16 @@ struct AppWindow
         m_rootChangedRevoker = content.XamlRoot().Changed(winrt::auto_revoke, [this](const auto& sender, const winrt::XamlRootChangedEventArgs& args)
         {
             auto scale = sender.RasterizationScale();
-            auto visible = sender.IsHostVisible();
-
             m_status.Text(std::to_wstring(scale));
         });
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
         {
-            auto poitnerId = args.Pointer().PointerId();
-
-            std::thread([]()
+            AppWindow::StartAppThread([nCmdShow]()
             {
                 auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
                 std::make_unique<AppWindow>()->Show(SW_SHOWNORMAL);
-            }).detach();
+            });
         });
 
         m_xamlSource2 = winrt::DesktopWindowXamlSource();
@@ -159,6 +155,20 @@ struct AppWindow
         m_xamlSource2.Close();
     }
 
+    template <typename Lambda>
+    static void StartAppThread(Lambda&& fn)
+    {
+        std::unique_lock<std::mutex> holdLock(m_lock);
+        m_threads.emplace_back([fn = std::forward<Lambda>(fn), threadRef = m_appThreadsWaiter.take_reference()]() mutable
+        {
+            std::forward<Lambda>(fn)();
+        });
+    }
+
+    inline static reference_waiter m_appThreadsWaiter;
+    inline static std::mutex m_lock;
+    inline static std::vector<std::thread> m_threads;
+
     const PCWSTR WindowClassName = L"Win32XamlAppWindow";
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow1{}; // This is owned by m_xamlSource, destroyed when Close() is called.
@@ -175,9 +185,19 @@ struct AppWindow
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
 {
-    auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
+    AppWindow::StartAppThread([nCmdShow]()
+    {
+        auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
+        std::make_unique<AppWindow>()->Show(nCmdShow);
+    });
 
-    std::make_unique<AppWindow>()->Show(nCmdShow);
+    AppWindow::m_appThreadsWaiter.wait_until_zero();
+
+    // now we are safe to iterate over m_threads as it can't change any more
+    for (auto& thread : AppWindow::m_threads)
+    {
+        thread.join();
+    }
 
     return 0;
 }

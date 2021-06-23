@@ -12,10 +12,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MultiWindowXamlApp.cpp" />
     <ClCompile Include="pch.cpp">
       <Filter>build</Filter>
     </ClCompile>
+    <ClCompile Include="MultiXamlAndWindowApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="..\app.manifest">

@@ -98,13 +98,11 @@ struct AppWindow
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
         {
-            auto poitnerId = args.Pointer().PointerId();
-
-            std::thread([]()
+            StartAppThread([]()
             {
                 auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
                 std::make_unique<AppWindow>()->Show(SW_SHOWNORMAL);
-            }).detach();
+            });
         });
 
         return 0;
@@ -149,8 +147,21 @@ struct AppWindow
         // Verify Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager instance counters are 
         // zero or that Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close is called.
         m_xamlSource.Close();
-
     }
+
+    template <typename Lambda>
+    static void StartAppThread(Lambda&& fn)
+    {
+        std::unique_lock<std::mutex> holdLock(m_lock);
+        m_threads.emplace_back([fn = std::forward<Lambda>(fn), threadRef = m_appThreadsWaiter.take_reference()]() mutable
+        {
+            std::forward<Lambda>(fn)();
+        });
+    }
+
+    inline static reference_waiter m_appThreadsWaiter;
+    inline static std::mutex m_lock;
+    inline static std::vector<std::thread> m_threads;
 
     const PCWSTR WindowClassName = L"Win32XamlAppWindow";
     wil::unique_hwnd m_window;
@@ -166,9 +177,19 @@ struct AppWindow
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
 {
-    auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
+    AppWindow::StartAppThread([nCmdShow]()
+    {
+        auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
+        std::make_unique<AppWindow>()->Show(nCmdShow);
+    });
 
-    std::make_unique<AppWindow>()->Show(nCmdShow);
+    AppWindow::m_appThreadsWaiter.wait_until_zero();
+
+    // now we are safe to iterate over m_threads as it can't change any more
+    for (auto& thread : AppWindow::m_threads)
+    {
+        thread.join();
+    }
 
     return 0;
 }

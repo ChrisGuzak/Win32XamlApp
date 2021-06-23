@@ -19,3 +19,5 @@
 #include <winrt/Windows.UI.Xaml.Markup.h>
 
 #include <windows.ui.xaml.hosting.desktopwindowxamlsource.h> // COM interop
+
+#include <semaphore.h>
