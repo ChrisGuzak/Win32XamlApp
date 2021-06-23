@@ -25,6 +25,10 @@ const PCWSTR contentText = LR"(
 
 struct AppWindow
 {
+    AppWindow(bool rightClickLaunch = false) : m_rightClickLaunch(rightClickLaunch)
+    {
+    }
+
     LRESULT MessageHandler(UINT message, WPARAM wparam, LPARAM lparam) noexcept
     {
         switch (message)
@@ -96,12 +100,16 @@ struct AppWindow
             m_status.Text(std::to_wstring(scale));
         });
 
-        m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
+        m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto& sender, const winrt::PointerRoutedEventArgs& args)
         {
-            StartAppThread([]()
+            auto uiElement = sender.as<winrt::UIElement>();
+            const bool isRightClick = (args.Pointer().PointerDeviceType() == winrt::Windows::Devices::Input::PointerDeviceType::Mouse) &&
+                (args.GetCurrentPoint(uiElement).Properties().IsRightButtonPressed());
+
+            StartAppThread([isRightClick]()
             {
                 auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
-                std::make_unique<AppWindow>()->Show(SW_SHOWNORMAL);
+                std::make_unique<AppWindow>(isRightClick)->Show(SW_SHOWNORMAL);
             });
         });
 
@@ -164,6 +172,7 @@ struct AppWindow
     inline static std::vector<std::thread> m_threads;
 
     const PCWSTR WindowClassName = L"Win32XamlAppWindow";
+    bool m_rightClickLaunch{};
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
