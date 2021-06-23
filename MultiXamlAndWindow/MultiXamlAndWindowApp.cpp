@@ -94,7 +94,7 @@ struct AppWindow
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
         {
-            AppWindow::StartAppThread([nCmdShow]()
+            AppWindow::StartAppThread([]()
             {
                 auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
                 std::make_unique<AppWindow>()->Show(SW_SHOWNORMAL);
@@ -150,8 +150,8 @@ struct AppWindow
         // In this use scenario we need to work around http://task.ms/33900412 (XamlCore leaked)
         // Verify Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager instance counters are 
         // zero or that Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close is called.
-        // Both order seem to work
-        m_xamlSource1.Close();
+
+        m_xamlSource1.Close(); // Either order here works
         m_xamlSource2.Close();
     }
 
