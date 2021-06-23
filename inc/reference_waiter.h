@@ -3,28 +3,6 @@
 #include <condition_variable>
 #include <algorithm>
 
-struct binary_semaphore
-{
-    void notify() // V()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_count++;
-        m_cv.notify_one(); // notify the waiting thread
-    }
-
-    void wait() // P()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_cv.wait(lock, [&] { return m_count > 0; });
-        m_count--;
-    }
-
-private:
-    std::mutex m_mutex;
-    std::condition_variable m_cv;
-    int m_count = 0;
-};
-
 struct reference_waiter
 {
     void wait_until_zero()

@@ -177,6 +177,8 @@ struct AppWindow
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
 {
+    auto coInit = wil::CoInitializeEx();
+
     AppWindow::StartAppThread([nCmdShow]()
     {
         auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);

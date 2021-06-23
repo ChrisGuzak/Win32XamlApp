@@ -20,4 +20,4 @@
 
 #include <windows.ui.xaml.hosting.desktopwindowxamlsource.h> // COM interop
 
-#include <semaphore.h>
+#include <reference_waiter.h>
