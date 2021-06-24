@@ -104,7 +104,7 @@ struct AppWindow
         {
             const bool isRightClick = args.GetCurrentPoint(sender.as<winrt::UIElement>()).Properties().IsRightButtonPressed();
 
-            StartAppThread([isRightClick]()
+            StartThread([isRightClick]()
             {
                 auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
                 std::make_unique<AppWindow>(isRightClick)->Show(SW_SHOWNORMAL);
@@ -156,13 +156,24 @@ struct AppWindow
     }
 
     template <typename Lambda>
-    static void StartAppThread(Lambda&& fn)
+    static void StartThread(Lambda&& fn)
     {
         std::unique_lock<std::mutex> holdLock(m_lock);
         m_threads.emplace_back([fn = std::forward<Lambda>(fn), threadRef = m_appThreadsWaiter.take_reference()]() mutable
         {
             std::forward<Lambda>(fn)();
         });
+    }
+
+    static void WaitUntilAllWindowsAreClosed()
+    {
+        m_appThreadsWaiter.wait_until_zero();
+
+        // now we are safe to iterate over m_threads as it can't change any more
+        for (auto& thread : AppWindow::m_threads)
+        {
+            thread.join();
+        }
     }
 
     inline static reference_waiter m_appThreadsWaiter;
@@ -186,19 +197,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmd
 {
     auto coInit = wil::CoInitializeEx();
 
-    AppWindow::StartAppThread([nCmdShow]()
+    AppWindow::StartThread([nCmdShow]()
     {
         auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
         std::make_unique<AppWindow>()->Show(nCmdShow);
     });
 
-    AppWindow::m_appThreadsWaiter.wait_until_zero();
-
-    // now we are safe to iterate over m_threads as it can't change any more
-    for (auto& thread : AppWindow::m_threads)
-    {
-        thread.join();
-    }
-
+    AppWindow::WaitUntilAllWindowsAreClosed();
     return 0;
 }
