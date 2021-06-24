@@ -102,9 +102,7 @@ struct AppWindow
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto& sender, const winrt::PointerRoutedEventArgs& args)
         {
-            auto uiElement = sender.as<winrt::UIElement>();
-            const bool isRightClick = (args.Pointer().PointerDeviceType() == winrt::Windows::Devices::Input::PointerDeviceType::Mouse) &&
-                (args.GetCurrentPoint(uiElement).Properties().IsRightButtonPressed());
+            const bool isRightClick = args.GetCurrentPoint(sender.as<winrt::UIElement>()).Properties().IsRightButtonPressed();
 
             StartAppThread([isRightClick]()
             {
