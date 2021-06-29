@@ -11,8 +11,8 @@ namespace winrt
 
 const PCWSTR contentText = LR"(
 <StackPanel
-    xmlns = 'http://schemas.microsoft.com/winfx/2006/xaml/presentation'
-    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'  
+    xmlns = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Margin = "20">
     <Rectangle Fill = "Red" Width = "100" Height = "100" Margin = "5" />
     <Rectangle Fill = "Blue" Width = "100" Height = "100" Margin = "5" />
