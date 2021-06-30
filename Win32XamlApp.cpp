@@ -10,17 +10,53 @@ namespace winrt
 }
 
 const PCWSTR contentText = LR"(
-<StackPanel
-    xmlns = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Margin = "20">
-    <Rectangle Fill = "Red" Width = "100" Height = "100" Margin = "5" />
-    <Rectangle Fill = "Blue" Width = "100" Height = "100" Margin = "5" />
-    <Rectangle Fill = "Green" Width = "100" Height = "100" Margin = "5" />
-    <Rectangle Fill = "Purple" Width = "100" Height = "100" Margin = "5" />
-    <TextBlock TextAlignment="Center">Xaml!</TextBlock>
-    <TextBlock x:Name="Status" TextAlignment="Left"></TextBlock>
-</StackPanel>
+<Page
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+
+    <NavigationView>
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Startup">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7B5;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Interaction">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7C9;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Appearance">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE771;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Color schemes">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE790;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Rendering">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7F8;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Actions">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE765;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+        </NavigationView.MenuItems>
+    </NavigationView>
+</Page>
 )";
 
 struct AppWindow
