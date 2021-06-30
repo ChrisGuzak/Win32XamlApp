@@ -9,56 +9,6 @@ namespace winrt
     using namespace winrt::Windows::UI::Xaml::Markup;
 }
 
-const PCWSTR contentText = LR"(
-<Page
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
-
-    <NavigationView>
-        <NavigationView.MenuItems>
-            <NavigationViewItem Content="Startup">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE7B5;" />
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
-
-            <NavigationViewItem Content="Interaction">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE7C9;" />
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
-
-            <NavigationViewItem Content="Appearance">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE771;" />
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
-
-            <NavigationViewItem Content="Color schemes">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE790;" />
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
-
-            <NavigationViewItem Content="Rendering">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE7F8;" />
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
-
-            <NavigationViewItem Content="Actions">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE765;" />
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
-
-        </NavigationView.MenuItems>
-    </NavigationView>
-</Page>
-)";
-
 struct AppWindow
 {
     LRESULT MessageHandler(UINT message, WPARAM wparam, LPARAM lparam) noexcept
@@ -118,9 +68,17 @@ struct AppWindow
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow));
 
+        winrt::hstring xamlText;
+        std::thread([&xamlText]()
+        {
+            auto full = std::filesystem::canonical(R"(.\app.xaml)");
+            auto file = winrt::Windows::Storage::StorageFile::GetFileFromPathAsync(full.c_str()).get();
+            xamlText = winrt::Windows::Storage::FileIO::ReadTextAsync(file).get();
+        }).join();
+
         // When this fails look in the debug output window, it shows the line and offset
         // that has the parsing problem.
-        auto content = winrt::XamlReader::Load(contentText).as<winrt::UIElement>();
+        auto content = winrt::XamlReader::Load(xamlText).as<winrt::UIElement>();
         
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
         {

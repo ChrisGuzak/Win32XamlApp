@@ -10,6 +10,7 @@
 
 #include <wil/win32_helpers.h>
 #include <wil/resource.h>
+#include <wil/stl.h>
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.UI.Xaml.h>
@@ -18,4 +19,10 @@
 #include <winrt/Windows.UI.Xaml.Input.h>
 #include <winrt/Windows.UI.Xaml.Markup.h>
 
+#include <winrt/Windows.Storage.h>
+#include <winrt/Windows.Storage.Streams.h>
+
 #include <windows.ui.xaml.hosting.desktopwindowxamlsource.h> // COM interop
+
+#include <filesystem>
+

@@ -27,4 +27,7 @@
       <Filter>build</Filter>
     </Manifest>
   </ItemGroup>
+  <ItemGroup>
+    <Page Include="App.xaml" />
+  </ItemGroup>
 </Project>
