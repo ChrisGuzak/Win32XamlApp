@@ -102,6 +102,8 @@ struct AppWindow
             return DefWindowProcW(window, message, wparam, lparam);
         };
         wcex.hInstance = wil::GetModuleInstanceHandle();
+        auto imageResMod = LoadLibraryExW(L"imageres.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_AS_DATAFILE);
+        wcex.hIcon = LoadIconW(imageResMod, reinterpret_cast<PCWSTR>(5206)); // App Icon
         wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
         wcex.lpszClassName = WindowClassName;
 
@@ -116,6 +118,8 @@ struct AppWindow
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow));
 
+        // When this fails look in the debug output window, it shows the line and offset
+        // that has the parsing problem.
         auto content = winrt::XamlReader::Load(contentText).as<winrt::UIElement>();
         
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
