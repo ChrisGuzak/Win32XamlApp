@@ -10,6 +10,7 @@
     <ClInclude Include="pch.h">
       <Filter>build</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32XamlApp.cpp" />
@@ -28,6 +29,9 @@
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="App.xaml" />
+    <ApplicationDefinition Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc" />
   </ItemGroup>
 </Project>

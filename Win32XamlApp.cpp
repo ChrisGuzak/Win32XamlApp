@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "resource.h"
 
 namespace winrt
 {
@@ -7,6 +8,18 @@ namespace winrt
     using namespace winrt::Windows::UI::Xaml::Hosting;
     using namespace winrt::Windows::UI::Xaml::Input;
     using namespace winrt::Windows::UI::Xaml::Markup;
+}
+
+winrt::Windows::UI::Xaml::UIElement LoadXamlResource(uint32_t id)
+{
+    auto rc = ::FindResourceW(nullptr, MAKEINTRESOURCE(id), MAKEINTRESOURCE(XAMLRESOURCE));
+    THROW_LAST_ERROR_IF(!rc);
+    HGLOBAL rcData = ::LoadResource(nullptr, rc);
+    THROW_LAST_ERROR_IF(!rcData);
+    auto textStart = static_cast<wchar_t*>(::LockResource(rcData));
+    auto size = SizeofResource(nullptr, rc);
+    winrt::hstring text{ textStart, size / sizeof(*textStart) }; // need a copy to null terminate
+    return winrt::Windows::UI::Xaml::Markup::XamlReader::Load(text).as<winrt::Windows::UI::Xaml::UIElement>();
 }
 
 struct AppWindow
@@ -68,18 +81,10 @@ struct AppWindow
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow));
 
-        winrt::hstring xamlText;
-        std::thread([&xamlText]()
-        {
-            auto full = std::filesystem::canonical(R"(.\app.xaml)");
-            auto file = winrt::Windows::Storage::StorageFile::GetFileFromPathAsync(full.c_str()).get();
-            xamlText = winrt::Windows::Storage::FileIO::ReadTextAsync(file).get();
-        }).join();
-
         // When this fails look in the debug output window, it shows the line and offset
         // that has the parsing problem.
-        auto content = winrt::XamlReader::Load(xamlText).as<winrt::UIElement>();
-        
+        auto content = LoadXamlResource(IDR_APP_XAML);
+
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
         {
             auto poitnerId = args.Pointer().PointerId();
