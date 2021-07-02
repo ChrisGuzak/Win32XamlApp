@@ -14,9 +14,9 @@ template<typename T = winrt::Windows::UI::Xaml::UIElement>
 winrt::Windows::UI::Xaml::UIElement LoadXamlResource(HMODULE mod, uint32_t id, const wchar_t* type = MakeIntResourceId(XAMLRESOURCE))
 {
     auto rc = ::FindResourceW(mod, MakeIntResourceId(id), type);
-    winrt::check_bool(rc == nullptr);
+    winrt::check_bool(rc != nullptr);
     HGLOBAL rcData = ::LoadResource(mod, rc);
-    winrt::check_bool(rcData == nullptr);
+    winrt::check_bool(rcData != nullptr);
     auto textStart = static_cast<wchar_t*>(::LockResource(rcData));
     auto size = SizeofResource(nullptr, rc);
     winrt::hstring text{ textStart, size / sizeof(*textStart) }; // need a copy to null terminate, see if this can be avoided
