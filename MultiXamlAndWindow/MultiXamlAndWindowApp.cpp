@@ -97,7 +97,7 @@ struct AppWindow
         const PCWSTR className = L"Win32XamlAppWindow";
         RegisterWindowClass<AppWindow>(className);
 
-        auto hwnd = CreateWindowExW(WS_EX_NOREDIRECTIONBITMAP, WindowClassName, L"Win32 Xaml App", WS_OVERLAPPEDWINDOW,
+        auto hwnd = CreateWindowExW(WS_EX_NOREDIRECTIONBITMAP, className, L"Win32 Xaml App", WS_OVERLAPPEDWINDOW,
            CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, wil::GetModuleInstanceHandle(), this);
         THROW_LAST_ERROR_IF(!hwnd);
 
@@ -148,7 +148,6 @@ struct AppWindow
     inline static std::mutex m_lock;
     inline static std::vector<std::thread> m_threads;
 
-    const PCWSTR WindowClassName = L"Win32XamlAppWindow";
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow1{}; // This is owned by m_xamlSource, destroyed when Close() is called.
     HWND m_xamlSourceWindow2{}; // This is owned by m_xamlSource, destroyed when Close() is called.
