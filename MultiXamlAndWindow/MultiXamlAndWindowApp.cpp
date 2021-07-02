@@ -1,13 +1,5 @@
 #include "pch.h"
-
-namespace winrt
-{
-    using namespace winrt::Windows::UI::Xaml;
-    using namespace winrt::Windows::UI::Xaml::Controls;
-    using namespace winrt::Windows::UI::Xaml::Hosting;
-    using namespace winrt::Windows::UI::Xaml::Input;
-    using namespace winrt::Windows::UI::Xaml::Markup;
-}
+#include <XamlWin32Helpers.h>
 
 const PCWSTR contentText = LR"(
 <StackPanel
@@ -25,88 +17,49 @@ const PCWSTR contentText = LR"(
 
 struct AppWindow
 {
-    LRESULT MessageHandler(UINT message, WPARAM wparam, LPARAM lparam) noexcept
-    {
-        switch (message)
-        {
-        case WM_CREATE:
-            return OnCreate();
-
-        case WM_SIZE:
-            return OnSize(wparam, lparam);
-
-        case WM_DESTROY:
-            return OnDestroy();
-        }
-        return DefWindowProcW(m_window.get(), message, wparam, lparam);
-    }
-
-    void RegisterWindowClass()
-    {
-        WNDCLASSEXW wcex{ sizeof(wcex) };
-        wcex.style = CS_HREDRAW | CS_VREDRAW;
-        wcex.lpfnWndProc = [](HWND window, UINT message, WPARAM wparam, LPARAM lparam) noexcept -> LRESULT
-        {
-            if (message == WM_NCCREATE)
-            {
-                auto cs = reinterpret_cast<CREATESTRUCT*>(lparam);
-                auto that = static_cast<AppWindow*>(cs->lpCreateParams);
-                that->m_window.reset(window); // take ownership
-                SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(that));
-            }
-            else if (message == WM_NCDESTROY)
-            {
-                SetWindowLongPtrW(window, GWLP_USERDATA, 0);
-            }
-            else if (auto that = reinterpret_cast<AppWindow*>(GetWindowLongPtrW(window, GWLP_USERDATA)))
-            {
-                return that->MessageHandler(message, wparam, lparam);
-            }
-
-            return DefWindowProcW(window, message, wparam, lparam);
-        };
-        wcex.hInstance = wil::GetModuleInstanceHandle();
-        wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wcex.lpszClassName = WindowClassName;
-
-        RegisterClassExW(&wcex);
-    }
-
     LRESULT OnCreate()
     {
-        m_xamlSource1 = winrt::DesktopWindowXamlSource();
+        using namespace winrt::Windows::UI::Xaml;
+        using namespace winrt::Windows::UI::Xaml::Controls;
+        using namespace winrt::Windows::UI::Xaml::Input;
+
+        m_xamlSource1 = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
 
         auto interop = m_xamlSource1.as<IDesktopWindowXamlSourceNative>();
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow1));
 
-        auto content = winrt::XamlReader::Load(contentText).as<winrt::UIElement>();
+        auto content = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as<winrt::Windows::UI::Xaml::UIElement>();
 
         m_xamlSource1.Content(content);
 
-        m_status = content.as<winrt::FrameworkElement>().FindName(L"Status").as<winrt::TextBlock>();
+        m_status = content.as<FrameworkElement>().FindName(L"Status").as<TextBlock>();
 
-        m_rootChangedRevoker = content.XamlRoot().Changed(winrt::auto_revoke, [this](const auto& sender, const winrt::XamlRootChangedEventArgs& args)
+        m_rootChangedRevoker = content.XamlRoot().Changed(winrt::auto_revoke, [this](auto&& sender, auto&& args)
         {
             auto scale = sender.RasterizationScale();
+            auto visible = sender.IsHostVisible();
+
             m_status.Text(std::to_wstring(scale));
         });
 
-        m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](const auto&, const winrt::PointerRoutedEventArgs& args)
+        m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](auto&& sender, auto&& args)
         {
-            AppWindow::StartAppThread([]()
+            const bool isRightClick = args.GetCurrentPoint(sender.as<UIElement>()).Properties().IsRightButtonPressed();
+
+            StartThread([isRightClick]()
             {
                 auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
-                std::make_unique<AppWindow>()->Show(SW_SHOWNORMAL);
+                std::make_unique<AppWindow>(isRightClick)->Show(SW_SHOWNORMAL);
             });
         });
 
-        m_xamlSource2 = winrt::DesktopWindowXamlSource();
+        m_xamlSource2 = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
         interop = m_xamlSource2.as<IDesktopWindowXamlSourceNative>();
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow2));
 
-        m_xamlSource2.Content(winrt::XamlReader::Load(contentText).as<winrt::UIElement>());
+        m_xamlSource2.Content(winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as<UIElement>());
 
         return 0;
     }
@@ -125,9 +78,26 @@ struct AppWindow
         return 0;
     }
 
+    LRESULT MessageHandler(UINT message, WPARAM wparam, LPARAM lparam) noexcept
+    {
+        switch (message)
+        {
+        case WM_CREATE:
+            return OnCreate();
+
+        case WM_SIZE:
+            return OnSize(wparam, lparam);
+
+        case WM_DESTROY:
+            return OnDestroy();
+        }
+        return DefWindowProcW(m_window.get(), message, wparam, lparam);
+    }
+
     void Show(int nCmdShow)
     {
-        RegisterWindowClass();
+        const PCWSTR className = L"Win32XamlAppWindow";
+        RegisterWindowClass<AppWindow>(className);
 
         auto hwnd = CreateWindowExW(WS_EX_NOREDIRECTIONBITMAP, WindowClassName, L"Win32 Xaml App", WS_OVERLAPPEDWINDOW,
            CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, wil::GetModuleInstanceHandle(), this);
@@ -165,6 +135,17 @@ struct AppWindow
         });
     }
 
+    static void WaitUntilAllWindowsAreClosed()
+    {
+        m_appThreadsWaiter.wait_until_zero();
+
+        // now we are safe to iterate over m_threads as it can't change any more
+        for (auto& thread : AppWindow::m_threads)
+        {
+            thread.join();
+        }
+    }
+
     inline static reference_waiter m_appThreadsWaiter;
     inline static std::mutex m_lock;
     inline static std::vector<std::thread> m_threads;
@@ -193,13 +174,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmd
         std::make_unique<AppWindow>()->Show(nCmdShow);
     });
 
-    AppWindow::m_appThreadsWaiter.wait_until_zero();
-
-    // now we are safe to iterate over m_threads as it can't change any more
-    for (auto& thread : AppWindow::m_threads)
-    {
-        thread.join();
-    }
-
+    AppWindow::WaitUntilAllWindowsAreClosed();
     return 0;
 }

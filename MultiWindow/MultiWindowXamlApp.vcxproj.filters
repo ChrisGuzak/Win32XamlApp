@@ -10,6 +10,9 @@
     <ClInclude Include="pch.h">
       <Filter>build</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>build</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MultiWindowXamlApp.cpp" />
@@ -26,5 +29,11 @@
     <None Include="..\packages.config">
       <Filter>build</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc" />
   </ItemGroup>
 </Project>
