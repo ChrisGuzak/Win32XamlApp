@@ -25,6 +25,3 @@
 #include <windows.ui.xaml.hosting.desktopwindowxamlsource.h> // COM interop
 
 #include <filesystem>
-
-#include "resource.h"
-

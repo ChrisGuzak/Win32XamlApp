@@ -3,6 +3,55 @@
 
 struct AppWindow
 {
+    static inline const auto contentText = LR"(
+<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    <NavigationView>
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Startup">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7B5;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Interaction">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7C9;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Appearance">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE771;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Color schemes">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE790;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Rendering">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7F8;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Actions">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE765;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+        </NavigationView.MenuItems>
+    </NavigationView>
+</Page>
+)";
+
     LRESULT OnCreate()
     {
         m_xamlSource = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
@@ -13,7 +62,7 @@ struct AppWindow
 
         // When this fails look in the debug output window, it shows the line and offset
         // that has the parsing problem.
-        auto content = LoadXamlResource(nullptr, IDR_APP_XAML);
+        auto content = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as<winrt::Windows::UI::Xaml::UIElement>();
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](auto&&, auto&& args)
         {

@@ -10,7 +10,6 @@
     <ClInclude Include="pch.h">
       <Filter>build</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32XamlApp.cpp" />
@@ -19,19 +18,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config">
-      <Filter>build</Filter>
-    </None>
+    <Manifest Include="..\app.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="app.manifest">
-      <Filter>build</Filter>
-    </Manifest>
+    <None Include="..\readme.md" />
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="resource.rc" />
+    <Image Include="..\Win32XamlApp.png" />
   </ItemGroup>
 </Project>
