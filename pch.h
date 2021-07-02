@@ -26,3 +26,5 @@
 
 #include <filesystem>
 
+#include "resource.h"
+
