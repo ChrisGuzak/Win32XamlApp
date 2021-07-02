@@ -1,19 +1,6 @@
 #include "pch.h"
+#include "resource.h"
 #include <XamlWin32Helpers.h>
-
-const PCWSTR contentText = LR"(
-<StackPanel
-    xmlns = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'  
-    Margin = "20">
-    <Rectangle Fill = "Red" Width = "100" Height = "100" Margin = "5" />
-    <Rectangle Fill = "Blue" Width = "100" Height = "100" Margin = "5" />
-    <Rectangle Fill = "Green" Width = "100" Height = "100" Margin = "5" />
-    <Rectangle Fill = "Purple" Width = "100" Height = "100" Margin = "5" />
-    <TextBlock TextAlignment="Center">Multi-Window App, Click on a box to create a new window</TextBlock>
-    <TextBlock x:Name="Status" TextAlignment="Left"></TextBlock>
-</StackPanel>
-)";
 
 struct AppWindow
 {
@@ -35,7 +22,7 @@ struct AppWindow
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow));
 
-        auto content = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as<winrt::Windows::UI::Xaml::UIElement>();
+        auto content = LoadXamlResource(nullptr, IDR_APP_XAML);
 
         m_xamlSource.Content(content);
 
