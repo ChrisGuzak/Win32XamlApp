@@ -7,23 +7,20 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h">
-      <Filter>build</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="Win32XamlApp.cpp" />
     <ClCompile Include="pch.cpp">
       <Filter>build</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="..\app.manifest" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\readme.md" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\Win32XamlApp.png" />
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\app.manifest">
+      <Filter>build</Filter>
+    </Manifest>
   </ItemGroup>
 </Project>
