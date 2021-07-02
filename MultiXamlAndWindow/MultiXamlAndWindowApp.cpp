@@ -45,12 +45,10 @@ struct AppWindow
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](auto&& sender, auto&& args)
         {
-            const bool isRightClick = args.GetCurrentPoint(sender.as<UIElement>()).Properties().IsRightButtonPressed();
-
-            StartThread([isRightClick]()
+            StartThread([]()
             {
                 auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
-                std::make_unique<AppWindow>(isRightClick)->Show(SW_SHOWNORMAL);
+                std::make_unique<AppWindow>()->Show(SW_SHOWNORMAL);
             });
         });
 
@@ -126,7 +124,7 @@ struct AppWindow
     }
 
     template <typename Lambda>
-    static void StartAppThread(Lambda&& fn)
+    static void StartThread(Lambda&& fn)
     {
         std::unique_lock<std::mutex> holdLock(m_lock);
         m_threads.emplace_back([fn = std::forward<Lambda>(fn), threadRef = m_appThreadsWaiter.take_reference()]() mutable
@@ -168,7 +166,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmd
 {
     auto coInit = wil::CoInitializeEx();
 
-    AppWindow::StartAppThread([nCmdShow]()
+    AppWindow::StartThread([nCmdShow]()
     {
         auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
         std::make_unique<AppWindow>()->Show(nCmdShow);
