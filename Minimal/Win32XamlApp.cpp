@@ -68,7 +68,7 @@ struct AppWindow
         {
             auto poitnerId = args.Pointer().PointerId();
         });
-        
+
         m_xamlSource.Content(content);
 
         return 0;
