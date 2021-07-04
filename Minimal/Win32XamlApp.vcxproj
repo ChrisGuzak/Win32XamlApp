@@ -151,7 +151,6 @@
     <Manifest Include="..\app.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\packages.config" />
     <None Include="..\readme.md" />
     <None Include="packages.config" />
   </ItemGroup>
