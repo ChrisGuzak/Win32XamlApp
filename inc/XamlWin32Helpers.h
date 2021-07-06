@@ -11,7 +11,7 @@ inline const wchar_t* MakeIntResourceId(int i)
 #define XAMLRESOURCE  256 // see resource.h, try to get rid of this by using a standard "file" type.
 
 template<typename T = winrt::Windows::UI::Xaml::UIElement>
-winrt::Windows::UI::Xaml::UIElement LoadXamlResource(HMODULE mod, uint32_t id, const wchar_t* type = MakeIntResourceId(XAMLRESOURCE))
+T LoadXamlResource(HMODULE mod, uint32_t id, const wchar_t* type = MakeIntResourceId(XAMLRESOURCE))
 {
     auto rc = ::FindResourceW(mod, MakeIntResourceId(id), type);
     winrt::check_bool(rc != nullptr);
