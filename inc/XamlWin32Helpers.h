@@ -18,7 +18,7 @@ winrt::Windows::UI::Xaml::UIElement LoadXamlResource(HMODULE mod, uint32_t id, c
     HGLOBAL rcData = ::LoadResource(mod, rc);
     winrt::check_bool(rcData != nullptr);
     auto textStart = static_cast<wchar_t*>(::LockResource(rcData));
-    auto size = SizeofResource(nullptr, rc);
+    auto size = SizeofResource(mod, rc);
     winrt::hstring text{ textStart, size / sizeof(*textStart) }; // need a copy to null terminate, see if this can be avoided
     return winrt::Windows::UI::Xaml::Markup::XamlReader::Load(text).as<T>();
 }
