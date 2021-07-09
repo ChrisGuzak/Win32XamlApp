@@ -59,6 +59,10 @@ struct AppWindow
 
     LRESULT OnDestroy()
     {
+        // Since the xaml rundown is async and requires message dispatching,
+        // run it down here while the message loop is still running.
+        // Work around http://task.ms/33900412, to be fixed
+        m_xamlSource.Close();
         PostQuitMessage(0);
         return 0;
     }
@@ -78,7 +82,6 @@ struct AppWindow
         }
         return DefWindowProcW(m_window.get(), message, wparam, lparam);
     }
-
 
     void Show(int nCmdShow)
     {
@@ -102,8 +105,6 @@ struct AppWindow
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }
-
-        m_xamlSource.Close(); // Work around http://task.ms/33900412, to be fixed
     }
 
     template <typename Lambda>

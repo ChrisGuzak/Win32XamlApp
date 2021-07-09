@@ -4,7 +4,7 @@
 const PCWSTR contentText = LR"(
 <StackPanel
     xmlns = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'  
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
     Margin = "20">
     <Rectangle Fill = "Red" Width = "100" Height = "100" Margin = "5" />
     <Rectangle Fill = "Blue" Width = "100" Height = "100" Margin = "5" />
@@ -72,6 +72,16 @@ struct AppWindow
 
     LRESULT OnDestroy()
     {
+        // Since the xaml rundown is async and requires message dispatching,
+        // run it down here while the message loop is still running.
+        // Work around http://task.ms/33900412, to be fixed
+
+        // In this use scenario we need to work around http://task.ms/33900412 (XamlCore leaked)
+        // Verify Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close is called
+        // in the debugger.
+        m_xamlSource1.Close(); // Either order here works, but there is an order related bug
+        m_xamlSource2.Close();
+
         PostQuitMessage(0);
         return 0;
     }
@@ -114,13 +124,6 @@ struct AppWindow
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }
-
-        // In this use scenario we need to work around http://task.ms/33900412 (XamlCore leaked)
-        // Verify Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager instance counters are 
-        // zero or that Windows.UI.Xaml.dll!DirectUI::WindowsXamlManager::XamlCore::Close is called.
-
-        m_xamlSource1.Close(); // Either order here works
-        m_xamlSource2.Close();
     }
 
     template <typename Lambda>
