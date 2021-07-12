@@ -1,0 +1,18 @@
+Not Flagged	>	18744	0	Main Thread	Main Thread	win32u.dll!00007fff28791414
+Not Flagged		18776	0	Worker Thread	ntdll.dll thread	ntdll.dll!00007fff2ae068e4
+Not Flagged		15228	0	Worker Thread	ntdll.dll thread	ntdll.dll!00007fff2ae068e4
+Not Flagged		11064	0	Worker Thread	ntdll.dll thread	ntdll.dll!00007fff2ae068e4
+Not Flagged		10140	0	Worker Thread	ntdll.dll thread	ntdll.dll!00007fff2ae068e4
+Not Flagged		7392	0	Worker Thread	combase.dll thread	combase.dll!00007fff29d43fe8
+Not Flagged		15700	0	Worker Thread	ntdll.dll thread	ntdll.dll!00007fff2ae068e4
+Not Flagged		10032	0	Worker Thread	SHCore.dll thread	win32u.dll!00007fff2879abf4
+Not Flagged		9560	0	Worker Thread	DManip Delegate Thread	win32u.dll!00007fff2879abf4
+Not Flagged		7516	0	Worker Thread	Windows.UI.Xaml.dll!CompositorScheduler::RenderThreadMainStatic	Windows.UI.Xaml.dll!CWindowsServices::WaitForObjects
+Not Flagged		2124	0	Worker Thread	combase.dll thread	combase.dll!00007fff29d43fe8
+Not Flagged		19348	0	Worker Thread	combase.dll thread	combase.dll!00007fff29d43fe8
+Not Flagged		14232	0	Worker Thread	SHCore.dll thread	win32u.dll!00007fff2879abf4
+Not Flagged		6708	0	Worker Thread	ntdll.dll thread	ntdll.dll!00007fff2ae068e4
+Not Flagged		2188	0	Worker Thread	Microsoft.VisualStudio.DesignTools.UwpTap.dll thread	Microsoft.VisualStudio.DesignTools.UwpTap.dll!00007ffeb7d43cbd
+Not Flagged		4600	0	Worker Thread	Microsoft.VisualStudio.DesignTools.UwpTap.dll thread	Microsoft.VisualStudio.DesignTools.UwpTap.dll!00007ffeb7d3aa06
+Not Flagged		3988	0	Worker Thread	Microsoft.VisualStudio.DesignTools.UwpTap.dll thread	Microsoft.VisualStudio.DesignTools.UwpTap.dll!00007ffeb7d43cbd
+Not Flagged		3272	0	Worker Thread	Microsoft.VisualStudio.DesignTools.UwpTap.dll thread	Microsoft.VisualStudio.DesignTools.UwpTap.dll!00007ffeb7d43cbd
