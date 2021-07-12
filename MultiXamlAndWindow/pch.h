@@ -12,6 +12,7 @@
 #include <wil/resource.h>
 
 #include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.UI.Input.h>
 #include <winrt/Windows.UI.Xaml.h>
 #include <winrt/Windows.UI.Xaml.Controls.h>
 #include <winrt/Windows.UI.Xaml.Hosting.h>

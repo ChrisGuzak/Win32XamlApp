@@ -45,7 +45,9 @@ struct AppWindow
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](auto&& sender, auto&& args)
         {
-            StartThread([]()
+            const bool isRightClick = args.GetCurrentPoint(sender.as<UIElement>()).Properties().IsRightButtonPressed();
+
+            StartThread([isRightClick]()
             {
                 auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
                 std::make_unique<AppWindow>()->Show(SW_SHOWNORMAL);
