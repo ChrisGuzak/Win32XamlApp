@@ -14,9 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\readme.md" />
-    <None Include="packages.config">
-      <Filter>build</Filter>
-    </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
