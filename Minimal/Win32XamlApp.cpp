@@ -66,7 +66,7 @@ struct AppWindow
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](auto&&, auto&& args)
         {
-            auto poitnerId = args.Pointer().PointerId();
+            auto pointerID = args.Pointer().PointerId();
         });
 
         m_xamlSource.Content(content);
