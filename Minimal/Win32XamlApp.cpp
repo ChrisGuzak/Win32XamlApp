@@ -2,7 +2,7 @@
 #include <win32app/XamlWin32Helpers.h>
 #include <win32app/win32_app_helpers.h>
 
-inline const auto contentText = LR"(
+inline constexpr auto contentText = LR"(
 <Page
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
