@@ -7,8 +7,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource.h">
+      <Filter>build</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>build</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MultiWindowXamlApp.cpp" />
@@ -17,17 +21,21 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="..\app.manifest">
+    <Page Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\win32_app.manifest">
       <Filter>build</Filter>
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <Filter>build</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="App.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="resource.rc" />
+    <ResourceCompile Include="resource.rc">
+      <Filter>build</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

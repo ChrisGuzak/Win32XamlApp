@@ -10,7 +10,7 @@ Less that 150 lines of code with 50 of it being markup (the `NavigationView` sto
 ![Win32 Xaml App](Win32XamlApp.png)
 
 ### Multi Window App - Supports multiple top level windows
-[MultiWindow](./MultiWindow/MultiWindowXamlApp.cpp) - This demonstrates a mulit-window Win32 app that uses Xaml. This hooks up some 
+[MultiWindow](./MultiWindow/MultiWindowXamlApp.cpp) - This demonstrates a multi-window Win32 app that uses Xaml. This hooks up some 
 handlers to the markups contents to demonstrate how to survive without data binding.
 
 ![Win32 Xaml App Multi Window](Win32XamlAppMultiWindow.png)
@@ -28,11 +28,6 @@ handlers to the markups contents to demonstrate how to survive without data bind
 ## Debugging tips
 Look in the debugger output window for Xaml parsing errors, it identifies line and offset of the error.
 
-## Xaml Win32 Helpers
-This is a collection of things that simplify use of Xaml in Win32 style apps. Loading Xaml from a Win32 resource
-enabling putting the markup in a file outside of the source code..
-
 ## Implementation notes
 * To use Islands Apps must specify `maxversiontested` via a manifest, see docs [here](https://docs.microsoft.com/en-us/windows/apps/desktop/modernize/host-standard-control-with-xaml-islands-cpp#create-a-desktop-application-project),
 see app.manifest used in all of the projects.
-* XamlWin32Helpers.h is immature and should be enhanced to cover more cases.

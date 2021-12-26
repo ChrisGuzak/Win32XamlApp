@@ -9,7 +9,6 @@
 #undef GetCurrentTime
 
 #include <wil/win32_helpers.h>
-#include <wil/resource.h>
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.UI.Input.h>
@@ -21,5 +20,4 @@
 
 #include <windows.ui.xaml.hosting.desktopwindowxamlsource.h> // COM interop
 
-#include <reference_waiter.h>
-
+#include <wil/resource.h>
