@@ -40,10 +40,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <Manifest>
-      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
-      <AdditionalManifestFiles>..\win32_app.manifest</AdditionalManifestFiles>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
