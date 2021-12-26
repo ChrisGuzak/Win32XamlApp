@@ -1,6 +1,12 @@
 # Win32 Xaml App Samples
 C++ samples that demonstrate basic Win32 use of Xaml using [DesktopWindowXamlSource](https://docs.microsoft.com/en-us/uwp/api/windows.ui.xaml.hosting.desktopwindowxamlsource?view=winrt-20348), also known
-as Xaml Islands. 
+as Xaml Islands.
+
+Special clone instructions, enable sub-modules.
+
+Be sure to clone this repo with `--recurse-submodules` ([docs with details](http://git-scm.com/book/en/v2/Git-Tools-Submodules#Cloning-a-Project-with-Submodules)) as the Win32AppHelpers 
+are accessed using a submodule. If you don't do this, run `git submodule init;git submodule update` in 
+the Win32AppHelper folder.
 
 ## Samples
 ### Minimal - 200 line .cpp file Xaml App
