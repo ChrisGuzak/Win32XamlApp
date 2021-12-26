@@ -2,9 +2,7 @@
 #include <win32app/XamlWin32Helpers.h>
 #include <win32app/win32_app_helpers.h>
 
-struct AppWindow
-{
-    static inline const auto contentText = LR"(
+inline const auto contentText = LR"(
 <Page
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -53,6 +51,8 @@ struct AppWindow
 </Page>
 )";
 
+struct AppWindow
+{
     LRESULT Create()
     {
         m_xamlSource = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
