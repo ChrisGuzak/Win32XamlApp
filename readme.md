@@ -24,8 +24,8 @@ handlers to the markups contents to demonstrate responding to Xaml originated ev
 Look in the debugger output window for Xaml parsing errors, it identifies line and offset of the error.
 
 ## Speical clone instructions
-Be sure to clone this repo with `--recurse-submodules` ([docs with details](http://git-scm.com/book/en/v2/Git-Tools-Submodules#Cloning-a-Project-with-Submodules)). Alternatively run `git submodule init;git submodule update` in 
-the Win32AppHelper folder.
+Be sure to clone this repo with `--recurse-submodules` ([docs with details](http://git-scm.com/book/en/v2/Git-Tools-Submodules#Cloning-a-Project-with-Submodules)). 
+Alternatively run `git submodule update --init` to use the Win32AppHelper submodule.
 
 `git clone --recurse-submodules https://github.com/ChrisGuzak/Win32XamlApp.git`
 
