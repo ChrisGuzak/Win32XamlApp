@@ -14,14 +14,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\readme.md" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <Filter>build</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="..\app.manifest">
+    <Manifest Include="..\win32_app.manifest">
       <Filter>build</Filter>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h">
+      <Filter>build</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
