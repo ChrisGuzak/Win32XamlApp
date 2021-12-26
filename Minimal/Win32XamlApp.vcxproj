@@ -58,10 +58,8 @@
     </ClCompile>
     <ClCompile Include="Win32XamlApp.cpp" />
     <Manifest Include="..\win32_app.manifest" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\readme.md" />
     <None Include="packages.config" />
+    <None Include="..\readme.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

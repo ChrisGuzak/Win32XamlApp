@@ -1,5 +1,7 @@
 #include "pch.h"
-#include <XamlWin32Helpers.h>
+#include <win32app/XamlWin32Helpers.h>
+#include <win32app/reference_waiter.h>
+#include <win32app/win32_app_helpers.h>
 
 const PCWSTR contentText = LR"(
 <StackPanel
@@ -17,7 +19,7 @@ const PCWSTR contentText = LR"(
 
 struct AppWindow
 {
-    LRESULT OnCreate()
+    LRESULT Create()
     {
         using namespace winrt::Windows::UI::Xaml;
         using namespace winrt::Windows::UI::Xaml::Controls;
@@ -64,15 +66,14 @@ struct AppWindow
         return 0;
     }
 
-    LRESULT OnSize(WPARAM /* SIZE_XXX */wparam, LPARAM /* x, y */ lparam)
+    LRESULT Size(WORD dx, WORD dy)
     {
-        const auto dx = LOWORD(lparam), dy = HIWORD(lparam);
         SetWindowPos(m_xamlSourceWindow1, nullptr, 0, 0, dx / 2, dy, SWP_SHOWWINDOW);
         SetWindowPos(m_xamlSourceWindow2, nullptr, dx / 2, 0, dx / 2, dy, SWP_SHOWWINDOW);
         return 0;
     }
 
-    LRESULT OnDestroy()
+    LRESULT Destroy()
     {
         // Since the xaml rundown is async and requires message dispatching,
         // run it down here while the message loop is still running.
@@ -88,44 +89,10 @@ struct AppWindow
         return 0;
     }
 
-    LRESULT MessageHandler(UINT message, WPARAM wparam, LPARAM lparam) noexcept
-    {
-        switch (message)
-        {
-        case WM_CREATE:
-            return OnCreate();
-
-        case WM_SIZE:
-            return OnSize(wparam, lparam);
-
-        case WM_DESTROY:
-            return OnDestroy();
-        }
-        return DefWindowProcW(m_window.get(), message, wparam, lparam);
-    }
-
     void Show(int nCmdShow)
     {
-        const PCWSTR className = L"Win32XamlAppWindow";
-        RegisterWindowClass<AppWindow>(className);
-
-        auto hwnd = CreateWindowExW(WS_EX_NOREDIRECTIONBITMAP, className, L"Win32 Xaml App", WS_OVERLAPPEDWINDOW,
-           CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, wil::GetModuleInstanceHandle(), this);
-        THROW_LAST_ERROR_IF(!hwnd);
-
-        ShowWindow(m_window.get(), nCmdShow);
-        UpdateWindow(m_window.get());
-        MessageLoop();
-    }
-
-    void MessageLoop()
-    {
-        MSG msg = {};
-        while (GetMessageW(&msg, nullptr, 0, 0))
-        {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
+        win32app::create_top_level_window_for_xaml(*this, L"Win32XamlAppWindow", L"Win32 Xaml App");
+        win32app::enter_simple_message_loop(*this, nCmdShow);
     }
 
     template <typename Lambda>
