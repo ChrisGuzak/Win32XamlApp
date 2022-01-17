@@ -124,6 +124,9 @@ struct AppWindow
     HWND m_xamlSourceWindow1{}; // This is owned by m_xamlSource, destroyed when Close() is called.
     HWND m_xamlSourceWindow2{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
+    // This is needed to coordinate the use of Xaml from multiple threads.
+    winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager = winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
+
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource1{ nullptr };
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource2{ nullptr };
 
