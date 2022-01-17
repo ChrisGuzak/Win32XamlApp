@@ -29,13 +29,11 @@
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config">
-      <Filter>build</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="resource.rc">
       <Filter>build</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

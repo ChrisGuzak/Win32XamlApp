@@ -13,11 +13,6 @@
     <ClCompile Include="MultiXamlAndWindowApp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config">
-      <Filter>build</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="pch.h">
       <Filter>build</Filter>
     </ClInclude>
@@ -26,5 +21,8 @@
     <Manifest Include="..\win32_app.manifest">
       <Filter>build</Filter>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
