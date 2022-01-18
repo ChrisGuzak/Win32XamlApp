@@ -69,6 +69,18 @@ struct AppWindow
             <winrt::Windows::UI::Xaml::Controls::Page>();
         auto navView = page.Content().as<winrt::Windows::UI::Xaml::Controls::NavigationView>();
 
+        m_itemInvoked = navView.ItemInvoked(winrt::auto_revoke, [this](auto&& s, auto&& e)
+        {
+            auto item = e.InvokedItemContainer().as<winrt::Windows::UI::Xaml::Controls::NavigationViewItem>();
+            auto text = winrt::unbox_value<winrt::hstring>(item.Content());
+
+            auto tb = winrt::Windows::UI::Xaml::Controls::TextBlock();
+            tb.Text(L"Hello " + text);
+
+            auto stackPanel = s.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
+            stackPanel.Children().Append(tb);
+        });
+
         auto stackPanel = page.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
         auto tb1 = winrt::Windows::UI::Xaml::Controls::TextBlock();
         tb1.Text(L"Hello");
@@ -112,6 +124,8 @@ struct AppWindow
 
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
+
+    winrt::Windows::UI::Xaml::Controls::NavigationView::ItemInvoked_revoker m_itemInvoked;
 
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
 
