@@ -9,6 +9,8 @@ inline constexpr auto contentText = LR"(
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
     <NavigationView>
+         <StackPanel x:Name="StackPanel1"/>
+
         <NavigationView.MenuItems>
             <NavigationViewItem Content="Startup">
                 <NavigationViewItem.Icon>
@@ -61,36 +63,20 @@ struct AppWindow
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow));
 
-// #define CUSTOM_CONTENT
-#ifdef CUSTOM_CONTENT
         // When this fails look in the debug output window, it shows the line and offset
         // that has the parsing problem.
         auto page = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as
             <winrt::Windows::UI::Xaml::Controls::Page>();
         auto navView = page.Content().as<winrt::Windows::UI::Xaml::Controls::NavigationView>();
-        auto selectedItem = navView.SelectedItem();
 
-        auto myTextBlock = winrt::Windows::UI::Xaml::Controls::TextBlock{};
-        myTextBlock.Text(L"Hello world");
-        myTextBlock.Margin(winrt::Windows::UI::Xaml::ThicknessHelper::FromUniformLength(4));
-        myTextBlock.Padding(winrt::Windows::UI::Xaml::ThicknessHelper::FromUniformLength(6));
-        myTextBlock.Name(L"myTB");
-
-        auto sp = winrt::Windows::UI::Xaml::Controls::StackPanel();
+        auto stackPanel = page.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
         auto tb1 = winrt::Windows::UI::Xaml::Controls::TextBlock();
         tb1.Text(L"Hello");
         auto tb2 = winrt::Windows::UI::Xaml::Controls::TextBlock();
         tb2.Text(L"world!");
-        sp.Children().Append(tb1);
-        sp.Children().Append(tb2);
-        page.Content(sp);
-
-        // TODO: Figure out how to get the NavigationView and StackPanel to co-exist
-
-#else
-        auto page = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as
-            <winrt::Windows::UI::Xaml::Controls::Page>();
-#endif
+        auto c = stackPanel.Children();
+        c.Append(tb1);
+        c.Append(tb2);
 
         m_pointerPressedRevoker = page.PointerPressed(winrt::auto_revoke, [](auto&&, auto&& args)
         {
