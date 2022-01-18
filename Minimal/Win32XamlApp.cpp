@@ -9,7 +9,7 @@ inline constexpr auto contentText = LR"(
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
     <NavigationView>
-         <StackPanel x:Name="StackPanel1"/>
+        <StackPanel x:Name="StackPanel1"/>
 
         <NavigationView.MenuItems>
             <NavigationViewItem Content="Startup">
@@ -69,30 +69,27 @@ struct AppWindow
             <winrt::Windows::UI::Xaml::Controls::Page>();
         auto navView = page.Content().as<winrt::Windows::UI::Xaml::Controls::NavigationView>();
 
-        m_itemInvoked = navView.ItemInvoked(winrt::auto_revoke, [this](auto&& s, auto&& e)
+        m_itemInvokedRevoker = navView.ItemInvoked(winrt::auto_revoke, [this](auto&& sender, auto&& args)
         {
-            auto item = e.InvokedItemContainer().as<winrt::Windows::UI::Xaml::Controls::NavigationViewItem>();
+            auto item = args.InvokedItemContainer().as<winrt::Windows::UI::Xaml::Controls::NavigationViewItem>();
             auto text = winrt::unbox_value<winrt::hstring>(item.Content());
 
             auto tb = winrt::Windows::UI::Xaml::Controls::TextBlock();
             tb.Text(L"Hello " + text);
 
-            auto stackPanel = s.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
+            auto stackPanel = sender.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
             stackPanel.Children().Append(tb);
         });
 
-        auto stackPanel = page.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
-        auto tb1 = winrt::Windows::UI::Xaml::Controls::TextBlock();
-        tb1.Text(L"Hello");
-        auto tb2 = winrt::Windows::UI::Xaml::Controls::TextBlock();
-        tb2.Text(L"world!");
-        auto c = stackPanel.Children();
-        c.Append(tb1);
-        c.Append(tb2);
-
-        m_pointerPressedRevoker = page.PointerPressed(winrt::auto_revoke, [](auto&&, auto&& args)
+        m_pointerPressedRevoker = page.PointerPressed(winrt::auto_revoke, [](auto&& sender, auto&& args)
         {
             auto pointerID = args.Pointer().PointerId();
+            auto tb = winrt::Windows::UI::Xaml::Controls::TextBlock();
+            tb.Text(L"PointerPressed");
+
+            auto page = sender.as<winrt::Windows::UI::Xaml::Controls::Page>();
+            auto stackPanel = page.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
+            stackPanel.Children().Append(tb);
         });
 
         m_xamlSource.Content(page);
@@ -110,7 +107,6 @@ struct AppWindow
     {
         // Since the xaml rundown is async and requires message dispatching,
         // run it down here while the message loop is still running.
-        // Work around http://task.ms/33900412, to be fixed
         m_xamlSource.Close();
         PostQuitMessage(0);
         return 0;
@@ -125,10 +121,9 @@ struct AppWindow
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
-    winrt::Windows::UI::Xaml::Controls::NavigationView::ItemInvoked_revoker m_itemInvoked;
-
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
 
+    winrt::Windows::UI::Xaml::Controls::NavigationView::ItemInvoked_revoker m_itemInvokedRevoker;
     winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
 };
 
