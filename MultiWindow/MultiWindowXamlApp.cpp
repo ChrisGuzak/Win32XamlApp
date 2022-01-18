@@ -61,17 +61,17 @@ struct AppWindow
     LRESULT Destroy()
     {
         // Since the xaml rundown is async and requires message dispatching,
-        // run it down here while the message loop is still running.
-        // Work around http://task.ms/33900412, to be fixed
+        // start its run down here while the message loop is still running.
         m_xamlSource.Close();
-        PostQuitMessage(0);
+        m_shutdownSignal.SetEvent(); // when using win32app::enter_com_message_loop
+        // PostQuitMessage(0); // when using win32app::enter_com_message_loop
         return 0;
     }
 
     void Show(int nCmdShow)
     {
         win32app::create_top_level_window_for_xaml(*this, L"Win32XamlAppWindow", L"Win32 Xaml App");
-        win32app::enter_simple_message_loop(*this, nCmdShow);
+        win32app::enter_com_message_loop(*this, nCmdShow, m_shutdownSignal);
     }
 
     template <typename Lambda>
@@ -105,6 +105,8 @@ struct AppWindow
 
     // This is needed to coordinate the use of Xaml from multiple threads.
     winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager = winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
+
+    wil::unique_event m_shutdownSignal{ wil::EventOptions::ManualReset };
 
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
 
