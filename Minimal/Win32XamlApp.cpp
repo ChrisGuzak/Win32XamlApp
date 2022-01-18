@@ -61,16 +61,43 @@ struct AppWindow
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow));
 
+// #define CUSTOM_CONTENT
+#ifdef CUSTOM_CONTENT
         // When this fails look in the debug output window, it shows the line and offset
         // that has the parsing problem.
-        auto content = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as<winrt::Windows::UI::Xaml::UIElement>();
+        auto page = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as
+            <winrt::Windows::UI::Xaml::Controls::Page>();
+        auto navView = page.Content().as<winrt::Windows::UI::Xaml::Controls::NavigationView>();
+        auto selectedItem = navView.SelectedItem();
 
-        m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](auto&&, auto&& args)
+        auto myTextBlock = winrt::Windows::UI::Xaml::Controls::TextBlock{};
+        myTextBlock.Text(L"Hello world");
+        myTextBlock.Margin(winrt::Windows::UI::Xaml::ThicknessHelper::FromUniformLength(4));
+        myTextBlock.Padding(winrt::Windows::UI::Xaml::ThicknessHelper::FromUniformLength(6));
+        myTextBlock.Name(L"myTB");
+
+        auto sp = winrt::Windows::UI::Xaml::Controls::StackPanel();
+        auto tb1 = winrt::Windows::UI::Xaml::Controls::TextBlock();
+        tb1.Text(L"Hello");
+        auto tb2 = winrt::Windows::UI::Xaml::Controls::TextBlock();
+        tb2.Text(L"world!");
+        sp.Children().Append(tb1);
+        sp.Children().Append(tb2);
+        page.Content(sp);
+
+        // TODO: Figure out how to get the NavigationView and StackPanel to co-exist
+
+#else
+        auto page = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as
+            <winrt::Windows::UI::Xaml::Controls::Page>();
+#endif
+
+        m_pointerPressedRevoker = page.PointerPressed(winrt::auto_revoke, [](auto&&, auto&& args)
         {
             auto pointerID = args.Pointer().PointerId();
         });
 
-        m_xamlSource.Content(content);
+        m_xamlSource.Content(page);
 
         return 0;
     }
