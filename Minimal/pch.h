@@ -22,5 +22,6 @@
 
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Streams.h>
+#include <winrt/Windows.System.h>
 
 #include <windows.ui.xaml.hosting.desktopwindowxamlsource.h> // COM interop
