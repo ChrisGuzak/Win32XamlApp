@@ -55,6 +55,59 @@ inline constexpr auto contentText = LR"(
 
 struct AppWindow
 {
+    struct SingleInstanceUI
+    {
+        enum class Item { None, Volume, Brightness, WiFi };
+
+        static SingleInstanceUI CreateOnDedicatedThread()
+        {
+            SingleInstanceUI singleInstUi;
+            singleInstUi.InitXamlAsync();
+            return singleInstUi;
+        }
+
+        winrt::fire_and_forget ShowAsync(Item item)
+        {
+            co_await winrt::resume_foreground(m_controller.DispatcherQueue());
+
+            // Now running on the UI thread
+
+            if (m_visibleItem != Item::None)
+            {
+                // Hide m_visibleItem
+            }
+
+            m_visibleItem = item;
+            if (m_visibleItem != Item::None)
+            {
+                // Show m_visibleItem
+            }
+        }
+
+        // move only type
+        SingleInstanceUI(const SingleInstanceUI&) = delete;
+        SingleInstanceUI& operator=(SingleInstanceUI&&) = default;
+        SingleInstanceUI(SingleInstanceUI&&) = default;
+        SingleInstanceUI& operator=(const SingleInstanceUI&) = delete;
+
+    private:
+        SingleInstanceUI() = default;
+
+        winrt::fire_and_forget InitXamlAsync()
+        {
+            co_await winrt::resume_foreground(m_controller.DispatcherQueue());
+
+            SetThreadDescription(GetCurrentThread(), L"SingleInstanceUI Xaml UI Thread");
+
+            m_manager = winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
+            // Create more Xaml stuff here
+        }
+
+        winrt::Windows::System::DispatcherQueueController m_controller = winrt::Windows::System::DispatcherQueueController::CreateOnDedicatedThread();
+        winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_manager{ nullptr };
+        Item m_visibleItem = Item::None;
+    };
+
     LRESULT Create()
     {
         m_xamlSource = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
@@ -81,7 +134,7 @@ struct AppWindow
             stackPanel.Children().Append(tb);
         });
 
-        m_pointerPressedRevoker = page.PointerPressed(winrt::auto_revoke, [](auto&& sender, auto&& args)
+        m_pointerPressedRevoker = page.PointerPressed(winrt::auto_revoke, [this](auto&& sender, auto&& args)
         {
             auto pointerID = args.Pointer().PointerId();
             auto tb = winrt::Windows::UI::Xaml::Controls::TextBlock();
@@ -91,6 +144,12 @@ struct AppWindow
             auto stackPanel = page.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
             stackPanel.Children().Append(tb);
         });
+
+        m_ui.emplace(SingleInstanceUI::CreateOnDedicatedThread());
+        auto& ui = m_ui.value();
+        ui.ShowAsync(SingleInstanceUI::Item::Brightness);
+        ui.ShowAsync(SingleInstanceUI::Item::WiFi);
+        ui.ShowAsync(SingleInstanceUI::Item::None);
 
         m_xamlSource.Content(page);
 
@@ -125,6 +184,8 @@ struct AppWindow
 
     winrt::Windows::UI::Xaml::Controls::NavigationView::ItemInvoked_revoker m_itemInvokedRevoker;
     winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
+
+    std::optional<SingleInstanceUI> m_ui;
 };
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
