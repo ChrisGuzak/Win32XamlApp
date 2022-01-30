@@ -2,12 +2,23 @@
 #include "resource.h"
 #include <win32app/XamlWin32Helpers.h>
 #include <win32app/win32_app_helpers.h>
-#include <win32app/reference_waiter.h>
 
-struct AppWindow
+struct AppWindow : public std::enable_shared_from_this<AppWindow>
 {
-    AppWindow(bool rightClickLaunch = false) : m_rightClickLaunch(rightClickLaunch)
+    AppWindow(winrt::Windows::System::DispatcherQueueController queueController, bool rightClickLaunch = false) :
+        m_queueController(std::move(queueController)),
+        m_rightClickLaunch(rightClickLaunch),
+        m_xamlManager(winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread())
     {
+        m_appWindowCount++;
+    }
+
+    ~AppWindow()
+    {
+        if (--m_appWindowCount == 0)
+        {
+            m_appDoneSignal.SetEvent();
+        }
     }
 
     LRESULT Create()
@@ -42,10 +53,10 @@ struct AppWindow
         {
             const bool isRightClick = args.GetCurrentPoint(sender.as<UIElement>()).Properties().IsRightButtonPressed();
 
-            StartThread([isRightClick]()
+            StartThread([isRightClick](auto&& queueController)
             {
-                auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
-                std::make_unique<AppWindow>(isRightClick)->Show(SW_SHOWNORMAL);
+                auto appWindow = std::make_shared<AppWindow>(std::move(queueController), isRightClick);
+                appWindow->Show(SW_SHOWNORMAL);
             });
         });
 
@@ -58,55 +69,58 @@ struct AppWindow
         return 0;
     }
 
+    winrt::fire_and_forget ShutdownAsync()
+    {
+        auto strongThis = std::move(m_selfRef);
+        co_await m_queueController.ShutdownQueueAsync();
+    }
+
     LRESULT Destroy()
     {
         // Since the xaml rundown is async and requires message dispatching,
         // start its run down here while the message loop is still running.
         m_xamlSource.Close();
-        m_shutdownSignal.SetEvent(); // when using win32app::enter_com_message_loop
-        // PostQuitMessage(0); // when using win32app::enter_com_message_loop
+        ShutdownAsync();
         return 0;
     }
 
     void Show(int nCmdShow)
     {
         win32app::create_top_level_window_for_xaml(*this, L"Win32XamlAppWindow", L"Win32 Xaml App");
-        win32app::enter_com_message_loop(*this, nCmdShow, m_shutdownSignal);
+        ShowWindow(m_window.get(), nCmdShow);
+        m_selfRef = shared_from_this();
+    }
+
+    winrt::Windows::System::DispatcherQueue DispatcherQueue() const
+    {
+        return m_queueController.DispatcherQueue();
     }
 
     template <typename Lambda>
     static void StartThread(Lambda&& fn)
     {
-        std::unique_lock<std::mutex> holdLock(m_lock);
-        m_threads.emplace_back([fn = std::forward<Lambda>(fn), threadRef = m_appThreadsWaiter.take_reference()]() mutable
+        auto queueController = winrt::Windows::System::DispatcherQueueController::CreateOnDedicatedThread();
+
+        queueController.DispatcherQueue().TryEnqueue(
+            [fn = std::forward<Lambda>(fn), queueController = std::move(queueController)]() mutable
         {
-            std::forward<Lambda>(fn)();
+            std::forward<Lambda>(fn)(std::move(queueController));
         });
     }
 
-    static void WaitUntilAllWindowsAreClosed()
-    {
-        m_appThreadsWaiter.wait_until_zero();
-
-        // now we are safe to iterate over m_threads as it can't change any more
-        for (auto& thread : AppWindow::m_threads)
-        {
-            thread.join();
-        }
-    }
-
-    inline static reference_waiter m_appThreadsWaiter;
-    inline static std::mutex m_lock;
-    inline static std::vector<std::thread> m_threads;
+    inline static std::atomic<int> m_appWindowCount;
+    inline static wil::unique_event m_appDoneSignal{ wil::EventOptions::None };
 
     bool m_rightClickLaunch{};
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
-    // This is needed to coordinate the use of Xaml from multiple threads.
-    winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager = winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
+    std::shared_ptr<AppWindow> m_selfRef;
 
-    wil::unique_event m_shutdownSignal{ wil::EventOptions::ManualReset };
+    // This is needed to coordinate the use of Xaml from multiple threads.
+    winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager{nullptr};
+
+    winrt::Windows::System::DispatcherQueueController m_queueController{ nullptr };
 
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
 
@@ -120,12 +134,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmd
 {
     auto coInit = wil::CoInitializeEx();
 
-    AppWindow::StartThread([nCmdShow]()
+    AppWindow::m_appWindowCount++;
+    AppWindow::StartThread([nCmdShow](const auto&& queueController)
     {
-        auto coInit = wil::CoInitializeEx(COINIT_APARTMENTTHREADED);
-        std::make_unique<AppWindow>()->Show(nCmdShow);
+        auto appWindow = std::make_shared<AppWindow>(std::move(queueController));
+        appWindow->Show(nCmdShow);
+        --AppWindow::m_appWindowCount;
     });
 
-    AppWindow::WaitUntilAllWindowsAreClosed();
+    AppWindow::m_appDoneSignal.wait();
     return 0;
 }
