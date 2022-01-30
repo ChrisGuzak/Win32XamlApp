@@ -17,6 +17,7 @@
 #include <winrt/Windows.UI.Xaml.Hosting.h>
 #include <winrt/Windows.UI.Xaml.Input.h>
 #include <winrt/Windows.UI.Xaml.Markup.h>
+#include <winrt/Windows.System.h>
 
 #include <windows.ui.xaml.hosting.desktopwindowxamlsource.h> // COM interop
 
