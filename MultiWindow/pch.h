@@ -21,4 +21,6 @@
 
 #include <windows.ui.xaml.hosting.desktopwindowxamlsource.h> // COM interop
 
+#include <mutex>
+
 #include <wil/resource.h>

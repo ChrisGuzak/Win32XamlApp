@@ -10,15 +10,10 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         m_rightClickLaunch(rightClickLaunch),
         m_xamlManager(winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread())
     {
-        m_appWindowCount++;
     }
 
     ~AppWindow()
     {
-        if (--m_appWindowCount == 0)
-        {
-            m_appDoneSignal.SetEvent();
-        }
     }
 
     LRESULT Create()
@@ -55,8 +50,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
 
             StartThread([isRightClick](auto&& queueController)
             {
-                auto appWindow = std::make_shared<AppWindow>(std::move(queueController), isRightClick);
-                appWindow->Show(SW_SHOWNORMAL);
+                std::make_shared<AppWindow>(std::move(queueController), isRightClick)->Show(SW_SHOWNORMAL);
             });
         });
 
@@ -77,6 +71,8 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
 
     LRESULT Destroy()
     {
+        ReportRemoved();
+
         // Since the xaml rundown is async and requires message dispatching,
         // start its run down here while the message loop is still running.
         m_xamlSource.Close();
@@ -86,9 +82,10 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
 
     void Show(int nCmdShow)
     {
+        ReportAdded();
+        m_selfRef = shared_from_this();
         win32app::create_top_level_window_for_xaml(*this, L"Win32XamlAppWindow", L"Win32 Xaml App");
         ShowWindow(m_window.get(), nCmdShow);
-        m_selfRef = shared_from_this();
     }
 
     winrt::Windows::System::DispatcherQueue DispatcherQueue() const
@@ -102,14 +99,69 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         auto queueController = winrt::Windows::System::DispatcherQueueController::CreateOnDedicatedThread();
 
         queueController.DispatcherQueue().TryEnqueue(
-            [fn = std::forward<Lambda>(fn), queueController = std::move(queueController)]() mutable
+            [fn = std::forward<Lambda>(fn), c = queueController]() mutable
         {
-            std::forward<Lambda>(fn)(std::move(queueController));
+            std::forward<Lambda>(fn)(std::move(c));
         });
+    }
+
+    void ReportAdded()
+    {
+        auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
+        AppWindow::m_appWindows.emplace_back(weak_from_this());
+
+        m_appWindowCount++;
+    }
+
+    static auto GetAppProcessRef()
+    {
+        m_appWindowCount++;
+        return wil::scope_exit([]
+        {
+            if (--m_appWindowCount == 0)
+            {
+                m_appDoneSignal.SetEvent();
+            }
+        });
+    }
+
+    void ReportRemoved()
+    {
+        auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
+        m_appWindows.erase(std::find_if(m_appWindows.begin(), m_appWindows.end(), [&](auto&& weakOther)
+        {
+            if (auto strong = weakOther.lock())
+            {
+                return strong.get() == this;
+            }
+            return false;
+        }));
+
+        if (--m_appWindowCount == 0)
+        {
+            m_appDoneSignal.SetEvent();
+        }
+    }
+
+    void BroadcastExecution()
+    {
+        auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
+        for (auto& weakWindow : m_appWindows)
+        {
+            if (auto strong = weakWindow.lock())
+            {
+                strong.get()->DispatcherQueue().TryEnqueue([]
+                {
+
+                });
+            }
+        }
     }
 
     inline static std::atomic<int> m_appWindowCount;
     inline static wil::unique_event m_appDoneSignal{ wil::EventOptions::None };
+    inline static std::mutex m_appWindowLock;
+    inline static std::vector<std::weak_ptr<AppWindow>> m_appWindows;
 
     bool m_rightClickLaunch{};
     wil::unique_hwnd m_window;
@@ -134,12 +186,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmd
 {
     auto coInit = wil::CoInitializeEx();
 
-    AppWindow::m_appWindowCount++;
-    AppWindow::StartThread([nCmdShow](const auto&& queueController)
+    AppWindow::StartThread([nCmdShow, procRef = AppWindow::GetAppProcessRef()](const auto&& queueController)
     {
-        auto appWindow = std::make_shared<AppWindow>(std::move(queueController));
-        appWindow->Show(nCmdShow);
-        --AppWindow::m_appWindowCount;
+        std::make_shared<AppWindow>(std::move(queueController))->Show(nCmdShow);
     });
 
     AppWindow::m_appDoneSignal.wait();

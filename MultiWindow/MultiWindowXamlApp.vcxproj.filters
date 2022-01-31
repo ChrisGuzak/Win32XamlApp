@@ -34,6 +34,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <Filter>build</Filter>
+    </None>
   </ItemGroup>
 </Project>
