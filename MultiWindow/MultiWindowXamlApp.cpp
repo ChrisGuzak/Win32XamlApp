@@ -48,6 +48,11 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         {
             const bool isRightClick = args.GetCurrentPoint(sender.as<UIElement>()).Properties().IsRightButtonPressed();
 
+            BroadcastExecution([](auto&& appWindow)
+            {
+                appWindow.m_status.Text(L"Broadcast");
+            });
+
             StartThread([isRightClick](auto&& queueController)
             {
                 std::make_shared<AppWindow>(std::move(queueController), isRightClick)->Show(SW_SHOWNORMAL);
@@ -132,16 +137,17 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         }
     }
 
-    void BroadcastExecution()
+    template <typename Lambda>
+    static void BroadcastExecution(Lambda&& fn)
     {
         auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
         for (auto& weakWindow : m_appWindows)
         {
             if (auto strong = weakWindow.lock())
             {
-                strong.get()->DispatcherQueue().TryEnqueue([]
+                strong.get()->DispatcherQueue().TryEnqueue([strong, fn = std::forward<Lambda>(fn)]
                 {
-
+                    fn(*strong.get());
                 });
             }
         }
