@@ -3,6 +3,11 @@
 #include <win32app/XamlWin32Helpers.h>
 #include <win32app/win32_app_helpers.h>
 
+// TODO: replace event with reference_waiter
+// Use co_await on the dispatchers instead of TryEnqueue, test the result
+// Use wil::resume_background to mitigate bugs
+// encapsulate global state, return a copy of the weak pointers, etc
+
 struct AppWindow : public std::enable_shared_from_this<AppWindow>
 {
     AppWindow(winrt::Windows::System::DispatcherQueueController queueController, bool rightClickLaunch = false) :
