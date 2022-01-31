@@ -63,12 +63,6 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         return 0;
     }
 
-    winrt::fire_and_forget ShutdownAsync()
-    {
-        auto strongThis = std::move(m_selfRef);
-        co_await m_queueController.ShutdownQueueAsync();
-    }
-
     LRESULT Destroy()
     {
         ReportRemoved();
@@ -76,15 +70,22 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         // Since the xaml rundown is async and requires message dispatching,
         // start its run down here while the message loop is still running.
         m_xamlSource.Close();
-        ShutdownAsync();
+
+        [](auto that) -> winrt::fire_and_forget
+        {
+            auto delayedRelease = std::move(that->m_selfRef);
+            co_await that->m_queueController.ShutdownQueueAsync();
+        }(this);
+
         return 0;
     }
 
     void Show(int nCmdShow)
     {
         ReportAdded();
-        m_selfRef = shared_from_this();
+
         win32app::create_top_level_window_for_xaml(*this, L"Win32XamlAppWindow", L"Win32 Xaml App");
+        m_selfRef = shared_from_this();
         ShowWindow(m_window.get(), nCmdShow);
     }
 
@@ -110,19 +111,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
         AppWindow::m_appWindows.emplace_back(weak_from_this());
 
-        m_appWindowCount++;
-    }
-
-    static auto GetAppProcessRef()
-    {
-        m_appWindowCount++;
-        return wil::scope_exit([]
-        {
-            if (--m_appWindowCount == 0)
-            {
-                m_appDoneSignal.SetEvent();
-            }
-        });
+        m_appLifetimeRefCount++;
     }
 
     void ReportRemoved()
@@ -137,7 +126,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
             return false;
         }));
 
-        if (--m_appWindowCount == 0)
+        if (--m_appLifetimeRefCount == 0)
         {
             m_appDoneSignal.SetEvent();
         }
@@ -158,7 +147,19 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         }
     }
 
-    inline static std::atomic<int> m_appWindowCount;
+    static auto GetAppLifetimeRef()
+    {
+        m_appLifetimeRefCount++;
+        return wil::scope_exit([]
+        {
+            if (--m_appLifetimeRefCount == 0)
+            {
+                m_appDoneSignal.SetEvent();
+            }
+        });
+    }
+
+    inline static std::atomic<int> m_appLifetimeRefCount;
     inline static wil::unique_event m_appDoneSignal{ wil::EventOptions::None };
     inline static std::mutex m_appWindowLock;
     inline static std::vector<std::weak_ptr<AppWindow>> m_appWindows;
@@ -186,7 +187,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmd
 {
     auto coInit = wil::CoInitializeEx();
 
-    AppWindow::StartThread([nCmdShow, procRef = AppWindow::GetAppProcessRef()](const auto&& queueController)
+    AppWindow::StartThread([nCmdShow, procRef = AppWindow::GetAppLifetimeRef()](const auto&& queueController)
     {
         std::make_shared<AppWindow>(std::move(queueController))->Show(nCmdShow);
     });
