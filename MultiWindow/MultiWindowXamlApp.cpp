@@ -4,10 +4,6 @@
 #include <win32app/win32_app_helpers.h>
 #include <win32app/reference_waiter.h>
 
-// TODO:
-// Use co_await on the dispatchers instead of TryEnqueue, test the result
-// Use wil::resume_background to mitigate bugs
-
 struct AppWindow : public std::enable_shared_from_this<AppWindow>
 {
     AppWindow(winrt::Windows::System::DispatcherQueueController queueController, bool rightClickLaunch = false) :
@@ -53,7 +49,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         {
             const bool isRightClick = args.GetCurrentPoint(sender.as<UIElement>()).Properties().IsRightButtonPressed();
 
-            BroadcastExecutionAsync([](auto&& appWindow)
+            BroadcastAsync([](auto&& appWindow)
             {
                 appWindow.m_status.Text(L"Broadcast");
             });
@@ -152,7 +148,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     }
 
     template <typename Lambda>
-    static winrt::fire_and_forget BroadcastExecutionAsync(const Lambda& fn)
+    static winrt::fire_and_forget BroadcastAsync(Lambda fn)
     {
         auto windows = GetAppWindows();
         for (const auto& windowRef : windows)
