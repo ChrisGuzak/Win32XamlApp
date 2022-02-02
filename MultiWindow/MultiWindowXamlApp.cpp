@@ -65,6 +65,16 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         return 0;
     }
 
+    void Show(int nCmdShow)
+    {
+        win32app::create_top_level_window_for_xaml(*this, L"Win32XamlAppWindow", L"Win32 Xaml App");
+        ShowWindow(m_window.get(), nCmdShow);
+
+        AddWeakRef(this);
+        m_selfRef = shared_from_this();
+        m_appRefHolder.emplace(m_appThreadsWaiter.take_reference());
+    }
+
     LRESULT Destroy()
     {
         RemoveWeakRef(this);
@@ -81,16 +91,6 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         }(this);
 
         return 0;
-    }
-
-    void Show(int nCmdShow)
-    {
-        win32app::create_top_level_window_for_xaml(*this, L"Win32XamlAppWindow", L"Win32 Xaml App");
-        ShowWindow(m_window.get(), nCmdShow);
-
-        AddWeakRef(this);
-        m_selfRef = shared_from_this();
-        m_appRefHolder.emplace(m_appThreadsWaiter.take_reference());
     }
 
     winrt::Windows::System::DispatcherQueue DispatcherQueue() const
