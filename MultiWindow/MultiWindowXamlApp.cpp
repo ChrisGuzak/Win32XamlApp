@@ -142,19 +142,32 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         }
     }
 
-    template <typename Lambda>
-    static void BroadcastExecution(Lambda&& fn)
+    static std::vector<std::shared_ptr<AppWindow>> GetAppWindows()
     {
+        std::vector<std::shared_ptr<AppWindow>> result;
+
         auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
+        result.reserve(m_appWindows.size());
         for (auto& weakWindow : m_appWindows)
         {
             if (auto strong = weakWindow.lock())
             {
-                strong.get()->DispatcherQueue().TryEnqueue([strong, fn = std::forward<Lambda>(fn)]
-                {
-                    fn(*strong.get());
-                });
+                result.emplace_back(std::move(strong));
             }
+        }
+        return result;
+    }
+
+    template <typename Lambda>
+    static void BroadcastExecution(const Lambda& fn)
+    {
+        auto windows = GetAppWindows();
+        for (const auto& window : windows)
+        {
+            window.get()->DispatcherQueue().TryEnqueue([&window, &fn]()
+            {
+                fn(*window.get());
+            });
         }
     }
 
@@ -194,7 +207,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     winrt::Windows::UI::Xaml::XamlRoot::Changed_revoker m_rootChangedRevoker;
 };
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
+_Use_decl_annotations_ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
 {
     auto coInit = wil::CoInitializeEx();
 
