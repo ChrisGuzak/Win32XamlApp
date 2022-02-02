@@ -13,10 +13,6 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     {
     }
 
-    ~AppWindow()
-    {
-    }
-
     LRESULT Create()
     {
         using namespace winrt::Windows::UI::Xaml;
