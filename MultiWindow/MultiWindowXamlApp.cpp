@@ -7,7 +7,6 @@
 // TODO:
 // Use co_await on the dispatchers instead of TryEnqueue, test the result
 // Use wil::resume_background to mitigate bugs
-// encapsulate global state
 
 struct AppWindow : public std::enable_shared_from_this<AppWindow>
 {
@@ -54,12 +53,12 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         {
             const bool isRightClick = args.GetCurrentPoint(sender.as<UIElement>()).Properties().IsRightButtonPressed();
 
-            BroadcastExecution([](auto&& appWindow)
+            BroadcastExecutionAsync([](auto&& appWindow)
             {
                 appWindow.m_status.Text(L"Broadcast");
             });
 
-            StartThread([isRightClick](auto&& queueController)
+            StartThreadAsync([isRightClick](auto&& queueController)
             {
                 std::make_shared<AppWindow>(std::move(queueController), isRightClick)->Show(SW_SHOWNORMAL);
             });
@@ -106,15 +105,11 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     }
 
     template <typename Lambda>
-    static void StartThread(Lambda&& fn)
+    static winrt::fire_and_forget StartThreadAsync(Lambda fn)
     {
         auto queueController = winrt::Windows::System::DispatcherQueueController::CreateOnDedicatedThread();
-
-        queueController.DispatcherQueue().TryEnqueue(
-            [fn = std::forward<Lambda>(fn), c = queueController]() mutable
-        {
-            std::forward<Lambda>(fn)(std::move(c));
-        });
+        co_await queueController.DispatcherQueue();
+        fn(std::move(queueController));
     }
 
     void ReportAdded()
@@ -157,19 +152,17 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     }
 
     template <typename Lambda>
-    static void BroadcastExecution(const Lambda& fn)
+    static winrt::fire_and_forget BroadcastExecutionAsync(const Lambda& fn)
     {
         auto windows = GetAppWindows();
         for (const auto& windowRef : windows)
         {
-            const auto window = windowRef.get();
-            window->DispatcherQueue().TryEnqueue([window, fn]()
-            {
-                fn(*window);
-            });
+            co_await windowRef.get()->DispatcherQueue();
+            fn(*windowRef.get());
         }
     }
 
+    // TODO: encapsulate this state in a class
     inline static reference_waiter m_appThreadsWaiter;
     inline static std::mutex m_appWindowLock;
     inline static std::vector<std::weak_ptr<AppWindow>> m_appWindows;
@@ -194,7 +187,7 @@ _Use_decl_annotations_ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPW
 {
     auto coInit = wil::CoInitializeEx();
 
-    AppWindow::StartThread([nCmdShow, procRef = AppWindow::m_appThreadsWaiter.take_reference()](const auto&& queueController)
+    AppWindow::StartThreadAsync([nCmdShow, procRef = AppWindow::m_appThreadsWaiter.take_reference()](const auto&& queueController)
     {
         std::make_shared<AppWindow>(std::move(queueController))->Show(nCmdShow);
     });
