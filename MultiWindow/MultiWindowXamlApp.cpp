@@ -71,7 +71,8 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
 
     LRESULT Destroy()
     {
-        ReportRemoved();
+        RemoveWeakRef(this);
+        m_appRefHolder.reset();
 
         // Since the xaml rundown is async and requires message dispatching,
         // start its run down here while the message loop is still running.
@@ -88,11 +89,12 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
 
     void Show(int nCmdShow)
     {
-        ReportAdded();
-
         win32app::create_top_level_window_for_xaml(*this, L"Win32XamlAppWindow", L"Win32 Xaml App");
-        m_selfRef = shared_from_this();
         ShowWindow(m_window.get(), nCmdShow);
+
+        AddWeakRef(this);
+        m_selfRef = shared_from_this();
+        m_appRefHolder.emplace(m_appThreadsWaiter.take_reference());
     }
 
     winrt::Windows::System::DispatcherQueue DispatcherQueue() const
@@ -106,29 +108,6 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         auto queueController = winrt::Windows::System::DispatcherQueueController::CreateOnDedicatedThread();
         co_await queueController.DispatcherQueue();
         fn(std::move(queueController));
-    }
-
-    void ReportAdded()
-    {
-        auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
-        AppWindow::m_appWindows.emplace_back(weak_from_this());
-
-        m_appRefHolder.emplace(m_appThreadsWaiter.take_reference());
-    }
-
-    void ReportRemoved()
-    {
-        auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
-        m_appWindows.erase(std::find_if(m_appWindows.begin(), m_appWindows.end(), [&](auto&& weakOther)
-        {
-            if (auto strong = weakOther.lock())
-            {
-                return strong.get() == this;
-            }
-            return false;
-        }));
-
-        m_appRefHolder.reset();
     }
 
     static std::vector<std::shared_ptr<AppWindow>> GetAppWindows()
@@ -158,13 +137,39 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         }
     }
 
-    // TODO: encapsulate this state in a class
-    inline static reference_waiter m_appThreadsWaiter;
-    inline static std::mutex m_appWindowLock;
-    inline static std::vector<std::weak_ptr<AppWindow>> m_appWindows;
+    static auto take_reference()
+    {
+        return m_appThreadsWaiter.take_reference();
+    }
 
-    bool m_rightClickLaunch{};
+    static void wait_until_zero()
+    {
+        m_appThreadsWaiter.wait_until_zero();
+    }
+
+    static void AddWeakRef(AppWindow* that)
+    {
+        auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
+        AppWindow::m_appWindows.emplace_back(that->weak_from_this());
+    }
+
+    static void RemoveWeakRef(AppWindow* that)
+    {
+        auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
+        m_appWindows.erase(std::find_if(m_appWindows.begin(), m_appWindows.end(), [&](auto&& weakOther)
+        {
+            if (auto strong = weakOther.lock())
+            {
+                return strong.get() == that;
+            }
+            return false;
+        }));
+    }
+
     wil::unique_hwnd m_window;
+
+private:
+    bool m_rightClickLaunch{};
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
     std::shared_ptr<AppWindow> m_selfRef; // needed to extend lifetime durring async rundown
@@ -177,17 +182,21 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     winrt::Windows::UI::Xaml::Controls::TextBlock m_status{ nullptr };
     winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
     winrt::Windows::UI::Xaml::XamlRoot::Changed_revoker m_rootChangedRevoker;
+
+    inline static reference_waiter m_appThreadsWaiter;
+    inline static std::mutex m_appWindowLock;
+    inline static std::vector<std::weak_ptr<AppWindow>> m_appWindows;
 };
 
 _Use_decl_annotations_ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
 {
     auto coInit = wil::CoInitializeEx();
 
-    AppWindow::StartThreadAsync([nCmdShow, procRef = AppWindow::m_appThreadsWaiter.take_reference()](const auto&& queueController)
+    AppWindow::StartThreadAsync([nCmdShow, procRef = AppWindow::take_reference()](const auto&& queueController)
     {
         std::make_shared<AppWindow>(std::move(queueController))->Show(nCmdShow);
     });
 
-    AppWindow::m_appThreadsWaiter.wait_until_zero();
+    AppWindow::wait_until_zero();
     return 0;
 }
