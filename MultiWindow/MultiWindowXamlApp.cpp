@@ -2,11 +2,12 @@
 #include "resource.h"
 #include <win32app/XamlWin32Helpers.h>
 #include <win32app/win32_app_helpers.h>
+#include <win32app/reference_waiter.h>
 
-// TODO: replace event with reference_waiter
+// TODO:
 // Use co_await on the dispatchers instead of TryEnqueue, test the result
 // Use wil::resume_background to mitigate bugs
-// encapsulate global state, return a copy of the weak pointers, etc
+// encapsulate global state
 
 struct AppWindow : public std::enable_shared_from_this<AppWindow>
 {
@@ -121,7 +122,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         auto lock = std::lock_guard<std::mutex>(m_appWindowLock);
         AppWindow::m_appWindows.emplace_back(weak_from_this());
 
-        m_appLifetimeRefCount++;
+        m_appRefHolder.emplace(m_appThreadsWaiter.take_reference());
     }
 
     void ReportRemoved()
@@ -136,10 +137,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
             return false;
         }));
 
-        if (--m_appLifetimeRefCount == 0)
-        {
-            m_appDoneSignal.SetEvent();
-        }
+        m_appRefHolder.reset();
     }
 
     static std::vector<std::shared_ptr<AppWindow>> GetAppWindows()
@@ -162,29 +160,17 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     static void BroadcastExecution(const Lambda& fn)
     {
         auto windows = GetAppWindows();
-        for (const auto& window : windows)
+        for (const auto& windowRef : windows)
         {
-            window.get()->DispatcherQueue().TryEnqueue([&window, &fn]()
+            const auto window = windowRef.get();
+            window->DispatcherQueue().TryEnqueue([window, fn]()
             {
-                fn(*window.get());
+                fn(*window);
             });
         }
     }
 
-    static auto GetAppLifetimeRef()
-    {
-        m_appLifetimeRefCount++;
-        return wil::scope_exit([]
-        {
-            if (--m_appLifetimeRefCount == 0)
-            {
-                m_appDoneSignal.SetEvent();
-            }
-        });
-    }
-
-    inline static std::atomic<int> m_appLifetimeRefCount;
-    inline static wil::unique_event m_appDoneSignal{ wil::EventOptions::None };
+    inline static reference_waiter m_appThreadsWaiter;
     inline static std::mutex m_appWindowLock;
     inline static std::vector<std::weak_ptr<AppWindow>> m_appWindows;
 
@@ -192,17 +178,14 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     wil::unique_hwnd m_window;
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
-    std::shared_ptr<AppWindow> m_selfRef;
+    std::shared_ptr<AppWindow> m_selfRef; // needed to extend lifetime durring async rundown
+    std::optional<reference_waiter::reference_waiter_holder> m_appRefHolder; // need to ensure lifetime of the app process
 
     // This is needed to coordinate the use of Xaml from multiple threads.
     winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager{nullptr};
-
     winrt::Windows::System::DispatcherQueueController m_queueController{ nullptr };
-
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
-
     winrt::Windows::UI::Xaml::Controls::TextBlock m_status{ nullptr };
-
     winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
     winrt::Windows::UI::Xaml::XamlRoot::Changed_revoker m_rootChangedRevoker;
 };
@@ -211,11 +194,11 @@ _Use_decl_annotations_ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPW
 {
     auto coInit = wil::CoInitializeEx();
 
-    AppWindow::StartThread([nCmdShow, procRef = AppWindow::GetAppLifetimeRef()](const auto&& queueController)
+    AppWindow::StartThread([nCmdShow, procRef = AppWindow::m_appThreadsWaiter.take_reference()](const auto&& queueController)
     {
         std::make_shared<AppWindow>(std::move(queueController))->Show(nCmdShow);
     });
 
-    AppWindow::m_appDoneSignal.wait();
+    AppWindow::m_appThreadsWaiter.wait_until_zero();
     return 0;
 }
