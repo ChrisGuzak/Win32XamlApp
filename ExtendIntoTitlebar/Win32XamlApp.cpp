@@ -2,6 +2,11 @@
 #include <win32app/XamlWin32Helpers.h>
 #include <win32app/win32_app_helpers.h>
 
+// https://microsoft.visualstudio.com/DefaultCollection/WinUI/_git/microsoft-ui-xaml-lift?path=/docs/design-notes/customtitlebar.md&_a=preview
+// https://www.osgwiki.com/wiki/Spy++#winspy.2B.2B
+// File Explorer
+// https://microsoft.visualstudio.com/DefaultCollection/WinUI/_git/microsoft-ui-xaml-lift/pullrequest/6655288
+
 inline constexpr auto contentText = LR"(
 <Page
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
