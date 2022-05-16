@@ -4,12 +4,14 @@
 #include <win32app/win32_app_helpers.h>
 #include <win32app/reference_waiter.h>
 
+static unsigned int s_nextWindowId = 1;
+
 struct AppWindow : public std::enable_shared_from_this<AppWindow>
 {
-    AppWindow(winrt::Windows::System::DispatcherQueueController queueController, bool rightClickLaunch = false) :
-        m_queueController(std::move(queueController)),
+    AppWindow(bool rightClickLaunch = false) :
         m_rightClickLaunch(rightClickLaunch),
-        m_xamlManager(winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread())
+        m_xamlManager(winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread()),
+        m_windowId(s_nextWindowId++)
     {
     }
 
@@ -38,22 +40,13 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
             auto scale = sender.RasterizationScale();
             auto visible = sender.IsHostVisible();
 
-            m_status.Text(std::to_wstring(scale));
+            m_status.Text(L"This is window #: " + std::to_wstring(m_windowId));
         });
 
         m_pointerPressedRevoker = content.PointerPressed(winrt::auto_revoke, [](auto&& sender, auto&& args)
         {
             const bool isRightClick = args.GetCurrentPoint(sender.as<UIElement>()).Properties().IsRightButtonPressed();
-
-            BroadcastAsync([](auto&& appWindow)
-            {
-                appWindow.m_status.Text(L"Broadcast");
-            });
-
-            StartThreadAsync([isRightClick](auto&& queueController)
-            {
-                std::make_shared<AppWindow>(std::move(queueController), isRightClick)->Show(SW_SHOWNORMAL);
-            });
+            std::make_shared<AppWindow>(isRightClick)->Show(SW_SHOWNORMAL);
         });
 
         return 0;
@@ -83,19 +76,12 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         // Since the xaml rundown is async and requires message dispatching,
         // start its run down here while the message loop is still running.
         m_xamlSource.Close();
-
-        [](auto that) -> winrt::fire_and_forget
-        {
-            auto delayedRelease = std::move(that->m_selfRef);
-            co_await that->m_queueController.ShutdownQueueAsync();
-        }(this);
-
         return 0;
     }
 
     winrt::Windows::System::DispatcherQueue DispatcherQueue() const
     {
-        return m_queueController.DispatcherQueue();
+        return winrt::Windows::System::DispatcherQueue::GetForCurrentThread();
     }
 
     template <typename Lambda>
@@ -173,12 +159,11 @@ private:
 
     // This is needed to coordinate the use of Xaml from multiple threads.
     winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_xamlManager{nullptr};
-    winrt::Windows::System::DispatcherQueueController m_queueController{ nullptr };
     winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
     winrt::Windows::UI::Xaml::Controls::TextBlock m_status{ nullptr };
     winrt::Windows::UI::Xaml::UIElement::PointerPressed_revoker m_pointerPressedRevoker;
     winrt::Windows::UI::Xaml::XamlRoot::Changed_revoker m_rootChangedRevoker;
-
+    unsigned int m_windowId;
     inline static reference_waiter m_appThreadsWaiter;
     inline static std::mutex m_appWindowLock;
     inline static std::vector<std::weak_ptr<AppWindow>> m_appWindows;
@@ -190,7 +175,7 @@ _Use_decl_annotations_ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPW
 
     AppWindow::StartThreadAsync([nCmdShow, procRef = AppWindow::take_reference()](const auto&& queueController)
     {
-        std::make_shared<AppWindow>(std::move(queueController))->Show(nCmdShow);
+        std::make_shared<AppWindow>()->Show(nCmdShow);
     });
 
     AppWindow::wait_until_zero();
