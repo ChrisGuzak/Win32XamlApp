@@ -59,8 +59,8 @@ struct AppWindow
     LRESULT Create()
     {
         auto providers = winrt::single_threaded_vector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>();
-        providers.Append(static_cast<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>(nullptr));
-        providers.Append(static_cast<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>(nullptr));
+        // providers.Append(static_cast<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>(nullptr));
+        // providers.Append(static_cast<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>(nullptr));
         auto app = winrt::make<winrt::WinUIHelpers::implementation::XamlApplication>(providers);
         // auto app2 = winrt::make<winrt::WinUIHelpers::implementation::XamlApplication>();
 
