@@ -37,10 +37,3 @@ namespace winrt::Win32XamlApp::implementation
         bool b_closed{};
     };
 }
-
-namespace winrt::Win32XamlApp::factory_implementation
-{
-    struct XamlApplication : XamlApplicationT<XamlApplication, implementation::XamlApplication>
-    {
-    };
-}

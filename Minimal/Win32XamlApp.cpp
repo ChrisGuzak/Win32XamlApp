@@ -58,7 +58,9 @@ struct AppWindow
 {
     LRESULT Create()
     {
-        auto app = winrt::make<winrt::Win32XamlApp::implementation::XamlApplication>();
+        auto vector = winrt::single_threaded_vector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>();
+        auto app = winrt::make<winrt::Win32XamlApp::implementation::XamlApplication>(vector);
+        // auto app2 = winrt::make<winrt::Win32XamlApp::implementation::XamlApplication>();
 
         m_xamlSource = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
 
@@ -108,6 +110,9 @@ struct AppWindow
 
     LRESULT Destroy()
     {
+        auto app = winrt::Windows::UI::Xaml::Application::Current().as<winrt::Win32XamlApp::XamlApplication>();
+        app.Close();
+
         // Since the xaml rundown is async and requires message dispatching,
         // run it down here while the message loop is still running.
         m_xamlSource.Close();

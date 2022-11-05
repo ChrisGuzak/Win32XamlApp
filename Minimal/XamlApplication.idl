@@ -5,8 +5,6 @@ namespace Win32XamlApp
         Windows.UI.Xaml.Markup.IXamlMetadataProvider,
         Windows.Foundation.IClosable
     {
-        XamlApplication(Windows.Foundation.Collections.IVector<Windows.UI.Xaml.Markup.IXamlMetadataProvider> providers);
-
         Windows.Foundation.Collections.IVector<Windows.UI.Xaml.Markup.IXamlMetadataProvider> MetadataProviders{ get; };
         Windows.Foundation.IClosable WindowsXamlManager{ get; };
     }
