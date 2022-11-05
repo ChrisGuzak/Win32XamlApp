@@ -14,8 +14,6 @@ namespace winrt::Win32XamlApp::implementation
         {
             m_providers.Append(provider);
         }
-
-        Initialize();
     }
 
     winrt::Windows::Foundation::Collections::IVector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider> XamlApplication::MetadataProviders()
@@ -28,7 +26,7 @@ namespace winrt::Win32XamlApp::implementation
         return m_windowsXamlManager;
     }
 
-    void XamlApplication::Initialize()
+    void XamlApplication::InitializeComponent()
     {
         m_windowsXamlManager = xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
     }

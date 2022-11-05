@@ -1,6 +1,6 @@
-#include "pch.h"
-
 #pragma once
+
+#include "pch.h"
 #include "XamlApplication.g.h"
 
 #include <winrt/Windows.UI.Xaml.Hosting.h>
@@ -9,10 +9,9 @@ namespace winrt::Win32XamlApp::implementation
 {
     struct XamlApplication : XamlApplicationT<XamlApplication>
     {
-        XamlApplication()
-        {
-            Initialize();
-        }
+        XamlApplication() = default;
+
+        void InitializeComponent(); // C++ WinRT 2 phase construction
 
         ~XamlApplication()
         {
@@ -22,7 +21,6 @@ namespace winrt::Win32XamlApp::implementation
         XamlApplication(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider> const& providers);
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider> MetadataProviders();
         winrt::Windows::Foundation::IClosable WindowsXamlManager();
-        void Initialize();
 
         // ICloseable
         void Close();
