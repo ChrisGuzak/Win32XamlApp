@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pch.h"
-#include "XamlApplication.g.h"
+#include "WinUIHelpers.XamlApplication.g.h"
 
 #include <winrt/Windows.UI.Xaml.Hosting.h>
 
@@ -15,14 +15,14 @@
 //      auto providers = winrt::single_threaded_vector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>();
 //      providers.Append(provider1);
 //      providers.Append(provider2);
-//      auto app = winrt::make<winrt::Win32XamlApp::implementation::XamlApplication>(providers);
+//      auto app = winrt::make<winrt::WinUIHelpers::implementation::XamlApplication>(providers);
 // 
 // void Destroy() {
 //      ...
-//      winrt::Windows::UI::Xaml::Application::Current().as<winrt::Win32XamlApp::XamlApplication>().Close();
+//      winrt::Windows::UI::Xaml::Application::Current().as<winrt::WinUIHelpers::XamlApplication>().Close();
 
 
-namespace winrt::Win32XamlApp::implementation
+namespace winrt::WinUIHelpers::implementation
 {
     struct XamlApplication : XamlApplicationT<XamlApplication>
     {

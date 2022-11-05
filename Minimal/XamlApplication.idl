@@ -1,5 +1,5 @@
 
-namespace Win32XamlApp
+namespace WinUIHelpers
 {
     runtimeclass XamlApplication : Windows.UI.Xaml.Application,
         Windows.UI.Xaml.Markup.IXamlMetadataProvider,

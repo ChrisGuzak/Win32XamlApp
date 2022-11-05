@@ -61,8 +61,8 @@ struct AppWindow
         auto providers = winrt::single_threaded_vector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>();
         providers.Append(static_cast<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>(nullptr));
         providers.Append(static_cast<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>(nullptr));
-        auto app = winrt::make<winrt::Win32XamlApp::implementation::XamlApplication>(providers);
-        // auto app2 = winrt::make<winrt::Win32XamlApp::implementation::XamlApplication>();
+        auto app = winrt::make<winrt::WinUIHelpers::implementation::XamlApplication>(providers);
+        // auto app2 = winrt::make<winrt::WinUIHelpers::implementation::XamlApplication>();
 
         m_xamlSource = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
 
@@ -112,7 +112,7 @@ struct AppWindow
 
     LRESULT Destroy()
     {
-        winrt::Windows::UI::Xaml::Application::Current().as<winrt::Win32XamlApp::XamlApplication>().Close();
+        winrt::Windows::UI::Xaml::Application::Current().as<winrt::WinUIHelpers::XamlApplication>().Close();
 
         // Since the xaml rundown is async and requires message dispatching,
         // run it down here while the message loop is still running.
