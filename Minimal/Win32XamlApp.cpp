@@ -1,6 +1,7 @@
 #include "pch.h"
 #include <win32app/XamlWin32Helpers.h>
 #include <win32app/win32_app_helpers.h>
+#include "XamlApplication.h"
 
 inline constexpr auto contentText = LR"(
 <Page
@@ -57,6 +58,8 @@ struct AppWindow
 {
     LRESULT Create()
     {
+        auto app = winrt::make<winrt::Win32XamlApp::implementation::XamlApplication>();
+
         m_xamlSource = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
 
         auto interop = m_xamlSource.as<IDesktopWindowXamlSourceNative>();

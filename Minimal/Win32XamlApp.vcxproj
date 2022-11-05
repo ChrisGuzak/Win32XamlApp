@@ -50,12 +50,19 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Win32XamlApp.cpp" />
     <ClInclude Include="RootInterop.h" />
+    <Midl Include="XamlApplication.idl" />
+    <ClCompile Include="XamlApplication.cpp">
+      <DependentUpon>XamlApplication.idl</DependentUpon>
+    </ClCompile>
+    <ClInclude Include="XamlApplication.h">
+      <DependentUpon>XamlApplication.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="pch.h" />
     <Manifest Include="..\win32_app.manifest" />
     <None Include="..\readme.md" />
     <None Include="packages.config" />

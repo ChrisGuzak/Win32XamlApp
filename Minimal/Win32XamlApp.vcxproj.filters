@@ -11,6 +11,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>build</Filter>
     </ClCompile>
+    <ClCompile Include="XamlApplication.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\readme.md" />
@@ -26,5 +27,11 @@
       <Filter>build</Filter>
     </ClInclude>
     <ClInclude Include="RootInterop.h" />
+    <ClInclude Include="XamlApplication.h">
+      <Filter>build</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="XamlApplication.idl" />
   </ItemGroup>
 </Project>
