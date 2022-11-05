@@ -30,14 +30,6 @@ namespace winrt::Win32XamlApp::implementation
 
     void XamlApplication::Initialize()
     {
-        const auto out = outer();
-
-        winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider provider(nullptr);
-        winrt::check_hresult(out->QueryInterface(
-            winrt::guid_of<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>(),
-            winrt::put_abi(provider)));
-        m_providers.Append(provider);
-
         m_windowsXamlManager = xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
     }
 
@@ -52,5 +44,48 @@ namespace winrt::Win32XamlApp::implementation
         m_windowsXamlManager = nullptr;
 
         // Toolkit has a message loop here.
+    }
+
+    xaml::Markup::IXamlType XamlApplication::GetXamlType(xaml::Interop::TypeName const& type)
+    {
+        for (const auto& provider : m_providers)
+        {
+            const auto xamlType = provider.GetXamlType(type);
+            if (xamlType != nullptr)
+            {
+                return xamlType;
+            }
+        }
+
+        return nullptr;
+    }
+
+    xaml::Markup::IXamlType XamlApplication::GetXamlType(winrt::hstring const& fullName)
+    {
+        for (const auto& provider : m_providers)
+        {
+            const auto xamlType = provider.GetXamlType(fullName);
+            if (xamlType != nullptr)
+            {
+                return xamlType;
+            }
+        }
+
+        return nullptr;
+    }
+
+    winrt::com_array<xaml::Markup::XmlnsDefinition> XamlApplication::GetXmlnsDefinitions()
+    {
+        std::list<xaml::Markup::XmlnsDefinition> definitions;
+        for (const auto& provider : m_providers)
+        {
+            auto defs = provider.GetXmlnsDefinitions();
+            for (const auto& def : defs)
+            {
+                definitions.insert(definitions.begin(), def);
+            }
+        }
+
+        return winrt::com_array<xaml::Markup::XmlnsDefinition>(definitions.begin(), definitions.end());
     }
 }

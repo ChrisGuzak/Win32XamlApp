@@ -2,12 +2,10 @@
 namespace Win32XamlApp
 {
     runtimeclass XamlApplication : Windows.UI.Xaml.Application,
-        // Windows.UI.Xaml.Markup.IXamlMetadataProvider,
+        Windows.UI.Xaml.Markup.IXamlMetadataProvider,
         Windows.Foundation.IClosable
     {
         XamlApplication(Windows.Foundation.Collections.IVector<Windows.UI.Xaml.Markup.IXamlMetadataProvider> providers);
-        protected XamlApplication();
-        protected void Initialize();
 
         Windows.Foundation.Collections.IVector<Windows.UI.Xaml.Markup.IXamlMetadataProvider> MetadataProviders{ get; };
         Windows.Foundation.IClosable WindowsXamlManager{ get; };

@@ -23,7 +23,14 @@ namespace winrt::Win32XamlApp::implementation
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider> MetadataProviders();
         winrt::Windows::Foundation::IClosable WindowsXamlManager();
         void Initialize();
+
+        // ICloseable
         void Close();
+
+        // IXamlMetadataProvider
+        winrt::Windows::UI::Xaml::Markup::IXamlType GetXamlType(winrt::Windows::UI::Xaml::Interop::TypeName const& type);
+        winrt::Windows::UI::Xaml::Markup::IXamlType GetXamlType(hstring const& fullName);
+        com_array<winrt::Windows::UI::Xaml::Markup::XmlnsDefinition> GetXmlnsDefinitions();
 
     private:
         winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager m_windowsXamlManager{ nullptr };
