@@ -56,9 +56,6 @@
     <ClCompile Include="Win32XamlApp.cpp" />
     <ClInclude Include="RootInterop.h" />
     <Midl Include="XamlApplication.idl" />
-    <ClCompile Include="XamlApplication.cpp">
-      <DependentUpon>XamlApplication.idl</DependentUpon>
-    </ClCompile>
     <ClInclude Include="XamlApplication.h">
       <DependentUpon>XamlApplication.idl</DependentUpon>
     </ClInclude>
