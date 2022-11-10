@@ -28,7 +28,7 @@ namespace winrt::WinUIHelpers::implementation
     {
         XamlApplication() = default;
 
-        XamlApplication(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider> const& providers)
+        XamlApplication(std::initializer_list<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider> providers)
         {
             for (auto&& provider : providers)
             {
