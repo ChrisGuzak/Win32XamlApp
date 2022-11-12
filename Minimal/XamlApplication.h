@@ -21,7 +21,6 @@
 //      ...
 //      winrt::Windows::UI::Xaml::Application::Current().as<winrt::WinUIHelpers::XamlApplication>().Close();
 
-
 namespace winrt::WinUIHelpers::implementation
 {
     struct XamlApplication : XamlApplicationT<XamlApplication>
@@ -117,3 +116,14 @@ namespace winrt::WinUIHelpers::implementation
         bool b_closed{};
     };
 }
+
+namespace winrt
+{
+    template<typename... TProviders>
+    auto make_xaml_application(TProviders&&... providers)
+    {
+        return winrt::make<winrt::WinUIHelpers::implementation::XamlApplication>(
+            std::initializer_list<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>{providers...});
+    }
+}
+

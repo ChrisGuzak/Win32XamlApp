@@ -59,9 +59,11 @@ struct AppWindow
     LRESULT Create()
     {
         // TODO: Proof of concept test of XamlApplicaiton, work in progress.
-        auto p1 = static_cast<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>(nullptr);
-        auto p2 = static_cast<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>(nullptr);
-        auto app = winrt::make<winrt::WinUIHelpers::implementation::XamlApplication>(std::initializer_list{p1, p2});
+        // auto winuiIXMP = winrt::Microsoft::UI::Xaml::XamlTypeInfo::XamlControlsXamlMetaDataProvider();
+        // auto markupIXMP = winrt::AppMarkup::XamlMetaDataProvider();
+        // auto app = winrt::make_xaml_application(winuiIXMP, markupIXMP);
+
+        auto app = winrt::make_xaml_application();
 
         m_xamlSource = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
 
