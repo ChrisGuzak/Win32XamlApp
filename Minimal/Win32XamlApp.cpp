@@ -54,6 +54,39 @@ inline constexpr auto contentText = LR"(
 </Page>
 )";
 
+MIDL_INTERFACE("37642806-F421-4FD0-9F82-23AE7C776182")
+IDesktopWindowContentBridgeInterop : public IUnknown
+{
+    IFACEMETHOD(Initialize)(IUnknown* compositor, HWND parentHwnd) = 0;
+    IFACEMETHOD(get_Hwnd)(_Outptr_ HWND * value) = 0;
+    IFACEMETHOD(get_AppliedScaleFactor)(_Out_ float* value) = 0;
+};
+
+MIDL_INTERFACE("1DFCBAC6-B36B-5CB9-9BC5-2B7A0EDDC378")
+IUIContentRoot : public IInspectable
+{
+    virtual HRESULT STDMETHODCALLTYPE get_UIContext(_COM_Outptr_result_maybenull_ IInspectable** value) = 0;
+};
+
+MIDL_INTERFACE("603381CB-2327-5454-919D-A61C5DC4A7D9")
+IUIContentRootPartner: public IInspectable
+{
+    virtual HRESULT STDMETHODCALLTYPE get_InputSite(_COM_Outptr_result_maybenull_ IInspectable** value) = 0;
+    // Composition Island, not what you are looking for.
+    virtual HRESULT STDMETHODCALLTYPE get_Island(_COM_Outptr_result_maybenull_ IInspectable** value) = 0;
+    // This object implements IDesktopWindowContentBridgeInterop
+    virtual HRESULT STDMETHODCALLTYPE get_WindowContext(_COM_Outptr_ IInspectable** value) = 0;
+};
+
+MIDL_INTERFACE("F21E14C1-E669-52AF-99CD-171EEE8E940D")
+IUIContextPartner : public IInspectable
+{
+    // This object implements IUIContentRootPartner
+    virtual HRESULT STDMETHODCALLTYPE get_UIContentRoot(_COM_Outptr_ IUIContentRoot** value) = 0;
+    // This object implements IDesktopWindowContentBridgeInterop
+    virtual HRESULT STDMETHODCALLTYPE get_WindowContext(_COM_Outptr_ IInspectable** value) = 0;
+};
+
 struct AppWindow
 {
     LRESULT Create()
@@ -75,6 +108,7 @@ struct AppWindow
         // that has the parsing problem.
         auto page = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(contentText).as
             <winrt::Windows::UI::Xaml::Controls::Page>();
+
         auto navView = page.Content().as<winrt::Windows::UI::Xaml::Controls::NavigationView>();
 
         m_itemInvokedRevoker = navView.ItemInvoked(winrt::auto_revoke, [this](auto&& sender, auto&& args)
@@ -101,6 +135,13 @@ struct AppWindow
         });
 
         m_xamlSource.Content(page);
+
+        auto contextPartner = page.UIContext().as<IUIContextPartner>();
+        winrt::com_ptr<IInspectable> windowContextUnk;
+        auto hr = contextPartner->get_WindowContext(windowContextUnk.put());
+        auto bridgeInterop = windowContextUnk.as<IDesktopWindowContentBridgeInterop>();
+        HWND hwnd{};
+        hr = bridgeInterop->get_Hwnd(&hwnd);
 
         return 0;
     }
