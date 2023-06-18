@@ -58,7 +58,7 @@ struct AppWindow
 {
     LRESULT Create()
     {
-        // TODO: Proof of concept test of XamlApplicaiton, work in progress.
+        // TODO: Proof of concept test of XamlApplication, work in progress.
         // auto winuiIXMP = winrt::Microsoft::UI::Xaml::XamlTypeInfo::XamlControlsXamlMetaDataProvider();
         // auto markupIXMP = winrt::AppMarkup::XamlMetaDataProvider();
         // auto app = winrt::make_xaml_application(winuiIXMP, markupIXMP);
