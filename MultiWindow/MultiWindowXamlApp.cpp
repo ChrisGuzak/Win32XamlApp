@@ -78,17 +78,19 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     LRESULT Destroy()
     {
         RemoveWeakRef(this);
-        m_appRefHolder.reset();
 
-        // Since the xaml rundown is async and requires message dispatching,
-        // start its run down here while the message loop is still running.
+        // Close the DesktopWindowXamlSource and the WindowsXamlManager.  This will start Xaml's run down since all the
+        // DWXS/WXM on the thread will now be closed.  Xaml's run-down is async, so we need to keep the message loop running.
         m_xamlSource.Close();
+        m_xamlManager.Close();
 
         [](auto that) -> winrt::fire_and_forget
         {
             auto delayedRelease = std::move(that->m_selfRef);
             co_await that->m_queueController.ShutdownQueueAsync();
         }(this);
+
+        m_appRefHolder.reset();
 
         return 0;
     }
@@ -187,6 +189,13 @@ private:
 _Use_decl_annotations_ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
 {
     auto coInit = wil::CoInitializeEx();
+
+    // Create a Xaml Application object.
+    // If we don't create an Application manually, Xaml will create one automatically when the first WindowsXamlManager
+    // or DesktopWindowXamlSource is created.  There's an issue with that codepath where after Xaml shuts down on the
+    // thread where the Application object was automatically created, future calls to WindowsXamlManager.Close() will crash.
+    // We can avoid this entirely by just creating an Application object ourselves first.
+    winrt::Windows::UI::Xaml::Application app{};
 
     AppWindow::StartThreadAsync([nCmdShow, procRef = AppWindow::take_reference()](const auto&& queueController)
     {
