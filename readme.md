@@ -17,7 +17,7 @@ handlers to the markups contents to demonstrate responding to Xaml originated ev
 ## Limitations
 * Not using WinUI 2.x, using System Xaml instead.
 * Does not implement accelerator handling or any integration with Win32 UI (who wants to use Win32 UI anyway!).
-* No Xaml Application object, so no way to provide custom metadata.
+* Uses the system provided Xaml Application object, so no way to provide custom metadata.
 * Intellisense in the .xaml files is broken, VS is confused seeing a .xaml file in a Win32 app project type.
 
 ## Debugging tips
