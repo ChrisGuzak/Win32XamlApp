@@ -65,6 +65,27 @@ struct AppWindow
 
         auto app = winrt::make_xaml_application();
 
+        // Checking out behavior of custom zone manager that seems to only apply to UWP apps
+        {
+            auto secManager = wil::CoCreateInstance< IInternetSecurityManager>(CLSID_InternetSecurityManager);
+            auto explorer = LR"(c:\windows\explorer.exe)";
+
+            DWORD zone{};
+            auto hr = secManager->MapUrlToZone(explorer, &zone, MUTZ_NOSAVEDFILECHECK);
+            FAIL_FAST_IF(zone != URLZONE_LOCAL_MACHINE);
+
+            struct __declspec(novtable) __declspec(uuid("C805B0C0-6210-4E4F-B76A-E894E8B1A4AD")) IXamlRuntimeStatics : IInspectable
+            {
+                virtual HRESULT STDMETHODCALLTYPE put_EnableWebView(bool) = 0;
+            };
+
+            winrt::get_activation_factory<IXamlRuntimeStatics>(L"Windows.UI.Xaml.Hosting.XamlRuntime")->put_EnableWebView(false);
+
+            DWORD zoneWebViewDisabled = 0;
+            hr = secManager->MapUrlToZone(explorer, &zoneWebViewDisabled, MUTZ_NOSAVEDFILECHECK);
+            FAIL_FAST_IF(zoneWebViewDisabled != URLZONE_LOCAL_MACHINE);
+        }
+
         m_xamlSource = winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource();
 
         auto interop = m_xamlSource.as<IDesktopWindowXamlSourceNative>();
