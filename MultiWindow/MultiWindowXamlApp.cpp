@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "resource.h"
+#include <wil/cppwinrt_helpers.h>
 #include <win32app/win32_app_helpers.h>
 #include <win32app/reference_waiter.h>
 
@@ -103,7 +104,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
     static winrt::fire_and_forget StartThreadAsync(Lambda fn)
     {
         auto queueController = winrt::Windows::System::DispatcherQueueController::CreateOnDedicatedThread();
-        co_await queueController.DispatcherQueue();
+        co_await wil::resume_foreground(queueController.DispatcherQueue());
         fn(std::move(queueController));
     }
 
@@ -129,7 +130,7 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         auto windows = GetAppWindows();
         for (const auto& windowRef : windows)
         {
-            co_await windowRef.get()->DispatcherQueue();
+            co_await wil::resume_foreground(windowRef.get()->DispatcherQueue());
             fn(*windowRef.get());
         }
     }
