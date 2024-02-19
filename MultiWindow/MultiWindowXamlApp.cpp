@@ -170,7 +170,7 @@ private:
     bool m_rightClickLaunch{};
     HWND m_xamlSourceWindow{}; // This is owned by m_xamlSource, destroyed when Close() is called.
 
-    std::shared_ptr<AppWindow> m_selfRef; // needed to extend lifetime durring async rundown
+    std::shared_ptr<AppWindow> m_selfRef; // needed to extend lifetime during async rundown
     std::optional<reference_waiter::reference_waiter_holder> m_appRefHolder; // need to ensure lifetime of the app process
 
     // This is needed to coordinate the use of Xaml from multiple threads.
