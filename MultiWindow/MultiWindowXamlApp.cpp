@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "resource.h"
-#include <win32app/XamlWin32Helpers.h>
 #include <win32app/win32_app_helpers.h>
 #include <win32app/reference_waiter.h>
 
@@ -27,8 +26,8 @@ struct AppWindow : public std::enable_shared_from_this<AppWindow>
         THROW_IF_FAILED(interop->AttachToWindow(m_window.get()));
         THROW_IF_FAILED(interop->get_WindowHandle(&m_xamlSourceWindow));
 
-        auto content = LoadXamlResource(nullptr, IDR_APP_XAML);
-
+        auto xamlString = win32app::get_resource_view<wchar_t>(L"App.xaml");
+        auto content = winrt::Windows::UI::Xaml::Markup::XamlReader::Load(xamlString).as<winrt::Windows::UI::Xaml::UIElement>();
         m_xamlSource.Content(content);
 
         m_status = content.as<FrameworkElement>().FindName(L"Status").as<TextBlock>();
