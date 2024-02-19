@@ -1,5 +1,4 @@
 #include "pch.h"
-#include <win32app/XamlWin32Helpers.h>
 #include <win32app/reference_waiter.h>
 #include <win32app/win32_app_helpers.h>
 

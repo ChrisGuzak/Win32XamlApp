@@ -14,9 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\readme.md" />
-    <None Include="packages.config">
-      <Filter>build</Filter>
-    </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="..\win32_app.manifest">

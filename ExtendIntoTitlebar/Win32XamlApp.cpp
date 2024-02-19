@@ -1,5 +1,4 @@
 #include "pch.h"
-#include <win32app/XamlWin32Helpers.h>
 #include <win32app/win32_app_helpers.h>
 
 // https://microsoft.visualstudio.com/DefaultCollection/WinUI/_git/microsoft-ui-xaml-lift?path=/docs/design-notes/customtitlebar.md&_a=preview
