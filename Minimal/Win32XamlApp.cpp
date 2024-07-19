@@ -1,6 +1,8 @@
 #include "pch.h"
 #include <win32app/win32_app_helpers.h>
 #include "XamlApplication.h"
+#include <iomanip>
+#include <sstream>
 
 inline constexpr auto contentText = LR"(
 <Page
@@ -81,8 +83,13 @@ struct AppWindow
             auto item = args.InvokedItemContainer().as<winrt::Windows::UI::Xaml::Controls::NavigationViewItem>();
             auto text = winrt::unbox_value<winrt::hstring>(item.Content());
 
+            auto hwndCom = m_window.get();
+            // Convert HWND (unsigned 32bit) to hex string to show in the app
+            std::wostringstream hwndStringstream;
+            hwndStringstream << std::hex << hwndCom;
+            std::wstring hwndString = L"0x" + std::wstring(8 - hwndStringstream.view().size(), L'0') + hwndString;
             auto tb = winrt::Windows::UI::Xaml::Controls::TextBlock();
-            tb.Text(L"Hello " + text);
+            tb.Text(L"My HWND: " + hwndString);
 
             auto stackPanel = sender.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
             stackPanel.Children().Append(tb);
