@@ -81,18 +81,23 @@ struct AppWindow
         m_itemInvokedRevoker = navView.ItemInvoked(winrt::auto_revoke, [this](auto&& sender, auto&& args)
         {
             auto item = args.InvokedItemContainer().as<winrt::Windows::UI::Xaml::Controls::NavigationViewItem>();
-            auto text = winrt::unbox_value<winrt::hstring>(item.Content());
 
             auto hwndCom = m_window.get();
             // Convert HWND (unsigned 32bit) to hex string to show in the app
             std::wostringstream hwndStringstream;
             hwndStringstream << std::hex << hwndCom;
-            std::wstring hwndString = L"0x" + std::wstring(8 - hwndStringstream.view().size(), L'0') + hwndString;
             auto tb = winrt::Windows::UI::Xaml::Controls::TextBlock();
-            tb.Text(L"My HWND: " + hwndString);
-
+            std::wstring outstr(L"My HWND: " + hwndStringstream.str());
+            tb.Text(outstr.c_str());
             auto stackPanel = sender.FindName(L"StackPanel1").as<winrt::Windows::UI::Xaml::Controls::StackPanel>();
             stackPanel.Children().Append(tb);
+
+            auto text = winrt::unbox_value<winrt::hstring>(item.Content());
+            if (text == L"Startup")
+            {
+                // ShellExecute the ShellHost app with our HWND as an argument
+                //::ShellExecute
+            }
         });
 
         m_pointerPressedRevoker = page.PointerPressed(winrt::auto_revoke, [this](auto&& sender, auto&& args)
